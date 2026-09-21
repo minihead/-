@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.LingyunFortune" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">#07080E</item>
+        <item name="android:windowBackground">#07080E</item>
+    </style>
+</resources>
