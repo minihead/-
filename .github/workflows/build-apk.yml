@@ -45,9 +45,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh release upload v1.0.0 ./LingyunFortune.apk --clobber || true
-        gh release create v1.0.1 ./LingyunFortune.apk --title "灵运阁 v1.0.1 移动端深度优化版" --notes "### 灵运阁 v1.0.1 更新日志
-
-- 📱 **比例与全屏适配**：彻底重构为 100% 移动端原生全屏流式布局，去除桌面黑边，匹配竖屏黄金比例
-- ⚡ **性能飞跃（120FPS）**：下线高开销全屏粒子重绘循环与重度滤镜，全面切换至 GPU 硬件加速图层，告别发热卡顿
-- 👆 **触控与顺畅滑动**：解开纵向滚动锁，原生弹性触摸滚动与吸顶导航栏
-- 🛠️ **稳定性增强**：修复相册保存多线程崩溃，本地离线字体即开即用" || gh release upload v1.0.1 ./LingyunFortune.apk --clobber
+        gh release create v1.0.1 ./LingyunFortune.apk --title "灵运阁 v1.0.1 移动端深度优化版" --notes "灵运阁 v1.0.1 移动端全屏流式布局、120FPS 硬件加速与纵向触控滑动修复版" || gh release upload v1.0.1 ./LingyunFortune.apk --clobber
