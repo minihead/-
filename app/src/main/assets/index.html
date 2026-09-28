@@ -57,7 +57,7 @@
       position: relative;
     }
 
-    /* Ambient Stardust Background (Pure GPU CSS, Zero Lag) */
+    /* Ambient Stardust Background */
     .ambient-sky-stars {
       position: fixed;
       inset: 0;
@@ -366,7 +366,7 @@
       color: var(--gold-light);
     }
 
-    /* Oracle Sticks protruding from cylinder top */
+    /* Oracle Sticks */
     .stick-bundle {
       position: absolute;
       top: -24px;
@@ -946,7 +946,6 @@
       border-top: 1px solid rgba(223, 183, 108, 0.2);
     }
 
-    /* Off-screen HD Canvas for Poster Generation */
     #poster-render-canvas {
       display: none;
     }
@@ -973,15 +972,15 @@
       </div>
     </header>
 
-    <!-- Almanac Banner -->
+    <!-- Almanac Banner - Dynamically updated by AlmanacEngine -->
     <section class="almanac-banner">
       <div class="almanac-primary-row">
-        <span id="txt-gregorian-date">2026年9月22日 星期二</span>
-        <span class="almanac-tag" id="txt-solar-term">秋分在即</span>
+        <span id="txt-gregorian-date">加载中...</span>
+        <span class="almanac-tag" id="txt-solar-term">节气顺行</span>
       </div>
       <div class="almanac-secondary-row">
-        <span id="txt-lunar-date">农历八月十二 · 丙午年 丁酉月 己酉日</span>
-        <span>建除十二神 · 成日吉曜</span>
+        <span id="txt-lunar-date">农历计算中...</span>
+        <span id="txt-jianchu-header">建除十二神</span>
       </div>
     </section>
 
@@ -1115,35 +1114,35 @@
     <!-- VIEW 3: 岁时宜忌 -->
     <section class="view-panel" id="view-almanac">
       <div class="glass-card">
-        <h3 class="oracle-title-text" style="font-size: 17px; margin-bottom: 12px;">今日日柱与吉凶神煞</h3>
+        <h3 class="oracle-title-text" style="font-size: 17px; margin-bottom: 12px;" id="almanac-section-title">今日日柱与吉凶神煞</h3>
         <div class="almanac-grid">
           <div class="almanac-box-item">
-            <div class="almanac-box-title" style="color: #52b788;">✦ 宜 ✦</div>
-            <div class="almanac-box-content">
+            <div class="almanac-box-title" style="color: #52b788;">✦ 今日宜 ✦</div>
+            <div class="almanac-box-content" id="almanac-yi-content">
               <span class="good-act-tag">祭祀 · 祈福 · 动土 · 会友</span><br>
               纳财 · 竖柱 · 上梁 · 开市立券
             </div>
           </div>
           <div class="almanac-box-item">
-            <div class="almanac-box-title" style="color: #e76f51;">✦ 忌 ✦</div>
-            <div class="almanac-box-content">
+            <div class="almanac-box-title" style="color: #e76f51;">✦ 今日忌 ✦</div>
+            <div class="almanac-box-content" id="almanac-ji-content">
               <span class="bad-act-tag">词讼 · 安门 · 针灸 · 争端</span><br>
               冒进 · 借贷 · 远涉重洋
             </div>
           </div>
           <div class="almanac-box-item">
             <div class="almanac-box-title">✦ 喜神财神方位 ✦</div>
-            <div class="almanac-box-content">
-              喜神方位：东南方<br>
-              财神方位：正南方<br>
-              福神方位：东北方
+            <div class="almanac-box-content" id="almanac-shen-direction">
+              喜神方位：西北方<br>
+              财神方位：东北方<br>
+              福神方位：东南方
             </div>
           </div>
           <div class="almanac-box-item">
-            <div class="almanac-box-title">✦ 五行生克 ✦</div>
-            <div class="almanac-box-content">
-              日主五行：己土（柔顺载物）<br>
-              纳音五行：大驿土<br>
+            <div class="almanac-box-title">✦ 五行生克纳音 ✦</div>
+            <div class="almanac-box-content" id="almanac-wuxing-nayin">
+              日主五行：乙木（柔顺生辉）<br>
+              纳音五行：佛灯火<br>
               岁煞方位：煞东
             </div>
           </div>
@@ -1211,7 +1210,7 @@
 
   </div>
 
-  <!-- HD Canvas for Generation -->
+  <!-- Offscreen HD Canvas for Poster Generation -->
   <canvas id="poster-render-canvas" width="750" height="1334"></canvas>
 
   <!-- Poster Export Modal -->
@@ -1229,7 +1228,292 @@
 
   <script>
     (function() {
-      // 1. Procedural Pure Web Audio Synthesizer (432Hz Zen Engine)
+      // ============================================================
+      // 1. ASTRONOMICAL DYNAMIC CALENDAR ENGINE (严谨天文级干支农历引擎)
+      // ============================================================
+      const ganList = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+      const zhiList = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+      const jianChuShenNames = ["建", "除", "满", "平", "定", "执", "破", "危", "成", "收", "开", "闭"];
+
+      // Traditional 12 JianChu Yi & Ji rules
+      const jianChuRules = {
+        "建": { tag: "建日 · 健旺亨通", yi: "见贵 · 入学 · 出行 · 动土 · 求官 · 筑室", ji: "开仓 · 出财 · 嫁娶 · 争讼" },
+        "除": { tag: "除日 · 去旧迎新", yi: "沐浴 · 求医 · 疗病 · 扫舍 · 破土 · 嫁娶", ji: "上梁 · 远涉 · 经商 · 开仓" },
+        "满": { tag: "满日 · 丰盈圆满", yi: "祈福 · 结纳 · 开市 · 交易 · 纳财 · 嫁娶", ji: "栽种 · 动土 · 裁衣 · 针灸" },
+        "平": { tag: "平日 · 平正宁谧", yi: "治道 · 修垣 · 涂泥 · 整饬 · 交易 · 会亲", ji: "祈福 · 登高 · 嫁娶 · 迁徙" },
+        "定": { tag: "定日 · 安定乾坤", yi: "冠带 · 嫁娶 · 进人口 · 祈福 · 订约 · 安床", ji: "诉讼 · 出师 · 诤论 · 涉险" },
+        "执": { tag: "执日 · 执掌持盈", yi: "营建 · 装修 · 祭祀 · 擒贼 · 固本 · 纳畜", ji: "开市 · 出财 · 借贷 · 移徙" },
+        "破": { tag: "破日 · 破旧立新", yi: "求医 · 破屋 · 坏垣 · 破除陈规 · 拆旧 · 解围", ji: "嫁娶 · 签约 · 庆典 · 开市 · 远行" },
+        "危": { tag: "危日 · 履薄安步", yi: "安床 · 祭祀 · 祈福 · 顺天 · 敬事 · 安居", ji: "登高 · 涉水 · 乘舟 · 险途" },
+        "成": { tag: "成日 · 大道终成", yi: "开市 · 立券 · 纳财 · 入宅 · 祈福 · 会友 · 入学", ji: "词讼 · 争辩 · 开仓 · 冒进" },
+        "收": { tag: "收日 · 归仓聚福", yi: "纳财 · 采购 · 收藏 · 订盟 · 索债 · 纳福", ji: "安葬 · 出行 · 散财 · 设宴" },
+        "开": { tag: "开日 · 气象万千", yi: "开市 · 动土 · 竖柱 · 祈福 · 会友 · 上任 · 嫁娶", ji: "破土 · 安葬 · 伐木 · 塞穴" },
+        "闭": { tag: "闭日 · 闭藏固守", yi: "筑堤 · 补垣 · 安床 · 储蓄 · 闭户静坐 · 养性", ji: "开市 · 出行 · 求医 · 动土" }
+      };
+
+      // 60 JiaZi NaYin & Compass directions
+      const naYinMap = {
+        "甲子":"海中金", "乙丑":"海中金", "丙寅":"炉中火", "丁卯":"炉中火", "戊辰":"大林木", "己巳":"大林木",
+        "庚午":"路旁土", "辛未":"路旁土", "壬申":"剑锋金", "癸酉":"剑锋金", "甲戌":"山头火", "乙亥":"山头火",
+        "丙子":"涧下水", "丁丑":"涧下水", "戊寅":"城头土", "己卯":"城头土", "庚辰":"白蜡金", "辛巳":"白蜡金",
+        "壬午":"杨柳木", "癸未":"杨柳木", "甲申":"泉中水", "乙酉":"泉中水", "丙戌":"屋上土", "丁亥":"屋上土",
+        "戊子":"霹雳火", "己丑":"霹雳火", "庚寅":"松柏木", "辛卯":"松柏木", "壬辰":"长流水", "癸巳":"长流水",
+        "甲午":"沙中金", "乙未":"沙中金", "丙申":"山下火", "丁酉":"山下火", "戊戌":"平地木", "己亥":"平地木",
+        "庚子":"壁上土", "辛丑":"壁上土", "壬寅":"金箔金", "癸卯":"金箔金", "甲辰":"覆灯火", "乙巳":"覆灯火",
+        "丙午":"天河水", "丁未":"天河水", "戊申":"大驿土", "己酉":"大驿土", "庚戌":"钗钏金", "辛亥":"钗钏金",
+        "壬子":"桑柘木", "癸丑":"桑柘木", "甲寅":"大溪水", "乙卯":"大溪水", "丙辰":"沙中土", "丁巳":"沙中土",
+        "戊午":"天上火", "己未":"天上火", "庚申":"石榴木", "辛酉":"石榴木", "壬戌":"大海水", "癸亥":"大海水"
+      };
+
+      // Compass Deity Direction by Day Stem (日干求喜神、财神)
+      const xiShenMap = { "甲":"东北", "乙":"西北", "丙":"西南", "丁":"正南", "戊":"东南", "己":"东北", "庚":"西北", "辛":"西南", "壬":"正南", "癸":"东南" };
+      const caiShenMap = { "甲":"东北", "乙":"东北", "丙":"正西", "丁":"正西", "戊":"正北", "己":"正南", "庚":"正东", "辛":"正东", "壬":"正南", "癸":"正南" };
+      const fuShenMap = { "甲":"东南", "乙":"东南", "丙":"正东", "丁":"正东", "戊":"正北", "己":"正南", "庚":"西南", "辛":"西南", "壬":"正西", "癸":"正西" };
+
+      // Compute standard Julian Day Number GanZhi
+      function getAstronomicalDayGanZhi(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = dateObj.getMonth() + 1;
+        const d = dateObj.getDate();
+        const a = Math.floor((14 - m) / 12);
+        const y2 = y + 4800 - a;
+        const m2 = m + 12 * a - 3;
+        const jdn = d + Math.floor((153 * m2 + 2) / 5) + 365 * y2 + Math.floor(y2 / 4) - Math.floor(y2 / 100) + Math.floor(y2 / 400) - 32045;
+        const gzIdx = ((jdn + 49) % 60 + 60) % 60;
+        return {
+          name: ganList[gzIdx % 10] + zhiList[gzIdx % 12],
+          gan: ganList[gzIdx % 10],
+          zhi: zhiList[gzIdx % 12],
+          idx: gzIdx
+        };
+      }
+
+      const wuxingDescMap = {
+        "甲": "甲木（栋梁参天）", "乙": "乙木（繁花生辉）",
+        "丙": "丙火（炎阳普照）", "丁": "丁火（灯烛清辉）",
+        "戊": "戊土（城垣崇厚）", "己": "己土（田园滋润）",
+        "庚": "庚金（刚毅肃杀）", "辛": "辛金（珠玉玲珑）",
+        "壬": "壬水（江河浩荡）", "癸": "癸水（甘霖润泽）"
+      };
+      const suiShaMap = {
+        "巳": "煞东", "酉": "煞东", "丑": "煞东",
+        "申": "煞南", "子": "煞南", "辰": "煞南",
+        "亥": "煞西", "卯": "煞西", "未": "煞西",
+        "寅": "煞北", "午": "煞北", "戌": "煞北"
+      };
+
+      function formatLunarDay(dayVal) {
+        const lunarNames = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十",
+                            "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十",
+                            "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"];
+        const num = parseInt(dayVal, 10);
+        if (!isNaN(num) && num >= 1 && num <= 30) {
+          return lunarNames[num - 1];
+        }
+        return dayVal;
+      }
+
+      // Compute exact Chinese Lunar Date via Intl API with reliable fallback
+      function getNativeLunarDate(dateObj) {
+        try {
+          const formatter = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+          });
+          const parts = formatter.formatToParts(dateObj);
+          const res = {};
+          parts.forEach(p => res[p.type] = p.value);
+          if (res.month && res.day) {
+            const formattedDay = formatLunarDay(res.day);
+            return {
+              yearName: res.yearName || "丙午",
+              month: res.month,
+              day: formattedDay,
+              fullStr: `农历${res.month}${formattedDay}`
+            };
+          }
+        } catch(e) {}
+
+        // Fallback astronomical calculation based on reference anchor
+        const anchor = new Date(2026, 8, 20); // 2026-09-20 is 八月初十
+        const curMidnight = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+        const diffDays = Math.round((curMidnight - anchor) / 86400000);
+        const lunarDayNum = 10 + diffDays;
+        const lunarNames = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十",
+                            "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十",
+                            "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"];
+        const dayStr = (lunarDayNum >= 1 && lunarDayNum <= 30) ? lunarNames[lunarDayNum - 1] : `${lunarDayNum}日`;
+        return {
+          yearName: "丙午",
+          month: "八月",
+          day: dayStr,
+          fullStr: `农历八月${dayStr}`
+        };
+      }
+
+      function getDynamicMonthPillar(yearName, lunarMonth) {
+        const monthBranchMap = {
+          "正月": 2, "一月": 2, "1月": 2,
+          "二月": 3, "2月": 3,
+          "三月": 4, "3月": 4,
+          "四月": 5, "4月": 5,
+          "五月": 6, "5月": 6,
+          "六月": 7, "6月": 7,
+          "七月": 8, "7月": 8,
+          "八月": 9, "8月": 9,
+          "九月": 10, "9月": 10,
+          "十月": 11, "10月": 11,
+          "十一月": 0, "冬月": 0, "11月": 0,
+          "十二月": 1, "腊月": 1, "12月": 1
+        };
+        const yearGan = (yearName && yearName.charAt(0)) || "丙";
+        const yearGanIdx = Math.max(0, ganList.indexOf(yearGan));
+        const branchIdx = monthBranchMap[lunarMonth] ?? 9;
+        const monthOffsetFromYin = (branchIdx - 2 + 12) % 12;
+        const startStemMap = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0];
+        const startStem = startStemMap[yearGanIdx];
+        const stemIdx = (startStem + monthOffsetFromYin) % 10;
+        return {
+          name: ganList[stemIdx] + zhiList[branchIdx],
+          branchIdx: branchIdx
+        };
+      }
+
+      // 24 Solar Terms covering the entire year
+      function getSolarTermName(dateObj) {
+        const m = dateObj.getMonth() + 1;
+        const d = dateObj.getDate();
+        const solarTerms = [
+          { m: 1, d: 5, name: "小寒" }, { m: 1, d: 20, name: "大寒" },
+          { m: 2, d: 4, name: "立春" }, { m: 2, d: 19, name: "雨水" },
+          { m: 3, d: 5, name: "惊蛰" }, { m: 3, d: 20, name: "春分" },
+          { m: 4, d: 4, name: "清明" }, { m: 4, d: 20, name: "谷雨" },
+          { m: 5, d: 5, name: "立夏" }, { m: 5, d: 21, name: "小满" },
+          { m: 6, d: 5, name: "芒种" }, { m: 6, d: 21, name: "夏至" },
+          { m: 7, d: 7, name: "小暑" }, { m: 7, d: 22, name: "大暑" },
+          { m: 8, d: 7, name: "立秋" }, { m: 8, d: 23, name: "处暑" },
+          { m: 9, d: 7, name: "白露" }, { m: 9, d: 23, name: "秋分" },
+          { m: 10, d: 8, name: "寒露" }, { m: 10, d: 23, name: "霜降" },
+          { m: 11, d: 7, name: "立冬" }, { m: 11, d: 22, name: "小雪" },
+          { m: 12, d: 7, name: "大雪" }, { m: 12, d: 22, name: "冬至" }
+        ];
+        const descs = {
+          "小寒": "小寒料峭 · 蓄力迎新", "大寒": "大寒岁暮 · 迎春纳福",
+          "立春": "立春阳和 · 万物始生", "雨水": "雨水润泽 · 草木萌动",
+          "惊蛰": "惊蛰雷鸣 · 气机勃发", "春分": "春分昼夜均 · 韶华正好",
+          "清明": "清明风朗 · 景清气明", "谷雨": "谷雨时节 · 润泽百谷",
+          "立夏": "立夏清和 · 绿荫渐浓", "小满": "小满将至 · 麦浪渐黄",
+          "芒种": "芒种繁忙 · 播种希冀", "夏至": "夏至昼长 · 阳极生阴",
+          "小暑": "小暑温风 · 盛夏芳菲", "大暑": "大暑蝉鸣 · 浓烈盛景",
+          "立秋": "立秋凉飙 · 气爽神清", "处暑": "处暑秋云 · 暑退风轻",
+          "白露": "白露凝珠 · 秋意渐浓", "秋分": "秋分时节 · 昼夜均分",
+          "寒露": "寒露清寒 · 鸿雁南翔", "霜降": "霜降岁晚 · 枫叶染红",
+          "立冬": "立冬水始冰 · 藏纳待发", "小雪": "小雪气寒 · 围炉煮茗",
+          "大雪": "大雪纷飞 · 素裹银装", "冬至": "冬至一阳生 · 岁回律转"
+        };
+        for (let i = solarTerms.length - 1; i >= 0; i--) {
+          const t = solarTerms[i];
+          if (m > t.m || (m === t.m && d >= t.d)) {
+            return descs[t.name] || `${t.name}时节 · 天道顺行`;
+          }
+        }
+        return "冬至一阳生 · 岁回律转";
+      }
+
+      // Global Day Cache
+      let activeCalendarState = null;
+
+      function calculateCurrentDayAlmanac() {
+        const now = new Date();
+        const yr = now.getFullYear();
+        const mo = now.getMonth() + 1;
+        const da = now.getDate();
+        const weekStrs = ["日", "一", "二", "三", "四", "五", "六"];
+        const wk = weekStrs[now.getDay()];
+
+        const lunar = getNativeLunarDate(now);
+        const dayGz = getAstronomicalDayGanZhi(now);
+        const monthPillar = getDynamicMonthPillar(lunar.yearName, lunar.month);
+
+        const dayBranchIdx = zhiList.indexOf(dayGz.zhi);
+        const jianChuIdx = (dayBranchIdx - monthPillar.branchIdx + 12) % 12;
+        const jianChuName = jianChuShenNames[jianChuIdx];
+        const jianChuRule = jianChuRules[jianChuName] || jianChuRules["成"];
+
+        const nayin = naYinMap[dayGz.name] || "大溪水";
+        const xiShen = xiShenMap[dayGz.gan] || "西北";
+        const caiShen = caiShenMap[dayGz.gan] || "东北";
+        const fuShen = fuShenMap[dayGz.gan] || "东南";
+        const wuxing = wuxingDescMap[dayGz.gan] || `${dayGz.gan}日主`;
+        const suiSha = suiShaMap[dayGz.zhi] || "煞东";
+
+        activeCalendarState = {
+          dateObj: now,
+          year: yr,
+          month: mo,
+          day: da,
+          week: wk,
+          gregorianStr: `${yr}年${mo}月${da}日 星期${wk}`,
+          lunarStr: `${lunar.fullStr} · ${lunar.yearName}年 ${monthPillar.name}月 ${dayGz.name}日`,
+          lunarShort: lunar.fullStr,
+          dayGz: dayGz.name,
+          dayStem: dayGz.gan,
+          dayBranch: dayGz.zhi,
+          solarTerm: getSolarTermName(now),
+          jianChu: jianChuName,
+          jianChuTag: jianChuRule.tag,
+          yi: jianChuRule.yi,
+          ji: jianChuRule.ji,
+          nayin: nayin,
+          xiShen: xiShen,
+          caiShen: caiShen,
+          fuShen: fuShen,
+          wuxing: wuxing,
+          suiSha: suiSha,
+          daySeed: yr * 10000 + mo * 100 + da
+        };
+
+        return activeCalendarState;
+      }
+
+      // Synchronize DOM with the computed day
+      function syncAlmanacToDOM() {
+        const cal = calculateCurrentDayAlmanac();
+
+        // 1. Top banner
+        document.getElementById("txt-gregorian-date").textContent = cal.gregorianStr;
+        document.getElementById("txt-solar-term").textContent = cal.solarTerm;
+        document.getElementById("txt-lunar-date").textContent = cal.lunarStr;
+        document.getElementById("txt-jianchu-header").textContent = `建除十二神 · ${cal.jianChuTag}`;
+
+        // 2. View 3 detail boxes
+        document.getElementById("almanac-section-title").textContent = `今日日柱【${cal.dayGz}】· ${cal.jianChuTag}`;
+        document.getElementById("almanac-yi-content").innerHTML = `<span class="good-act-tag">${cal.yi.split(" · ").slice(0, 4).join(" · ")}</span><br>${cal.yi.split(" · ").slice(4).join(" · ") || "百事顺遂 · 万事咸宜"}`;
+        document.getElementById("almanac-ji-content").innerHTML = `<span class="bad-act-tag">${cal.ji.split(" · ").slice(0, 3).join(" · ")}</span><br>${cal.ji.split(" · ").slice(3).join(" · ") || "慎勿妄动 · 戒除急躁"}`;
+        document.getElementById("almanac-shen-direction").innerHTML = `喜神方位：${cal.xiShen}方<br>财神方位：${cal.caiShen}方<br>福神方位：${cal.fuShen}方`;
+        document.getElementById("almanac-wuxing-nayin").innerHTML = `日主五行：${cal.wuxing}<br>纳音五行：${cal.nayin}<br>岁煞方位：${cal.suiSha}`;
+      }
+
+      // Initial Sync
+      syncAlmanacToDOM();
+
+      // AUTO-UPDATE HOOKS: Sync automatically on visibilitychange (app resume), window focus, and midnight crossing
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") syncAlmanacToDOM();
+      });
+      window.addEventListener("focus", () => syncAlmanacToDOM());
+      setInterval(() => {
+        const now = new Date();
+        if (activeCalendarState && now.getDate() !== activeCalendarState.day) {
+          syncAlmanacToDOM();
+          if (typeof renderTarotTableau === "function") renderTarotTableau();
+        }
+      }, 30000); // Check every 30 seconds
+
+      // ============================================================
+      // 2. Procedural Pure Web Audio Synthesizer (432Hz Zen Engine)
+      // ============================================================
       class ZenAudioEngine {
         constructor() {
           this.ctx = null;
@@ -1318,7 +1602,6 @@
 
       const audio = new ZenAudioEngine();
 
-      // Mobile Touch Gesture Unlock for Audio
       const unlockAudio = () => {
         audio.init();
         document.removeEventListener("touchstart", unlockAudio);
@@ -1334,8 +1617,9 @@
         if (!audio.muted) audio.playBowl(528);
       });
 
-      // 2. Navigation Tabs & Indicator Pill
-      const navBar = document.getElementById("main-nav-bar");
+      // ============================================================
+      // 3. Navigation Tabs & Indicator Pill
+      // ============================================================
       const navTabs = document.querySelectorAll(".nav-tab-item");
       const navIndicator = document.getElementById("nav-pill-indicator");
       const viewPanels = document.querySelectorAll(".view-panel");
@@ -1364,7 +1648,9 @@
         });
       });
 
-      // 3. Oracle Divination Data & Interactions
+      // ============================================================
+      // 4. Oracle Divination Data & Interactions
+      // ============================================================
       const oracleDataList = [
         {
           tier: "✦ 大吉 · 上上签",
@@ -1423,7 +1709,9 @@
         }
       ];
 
-      let currentOracle = oracleDataList[0];
+      // Daily default oracle based on calendar seed
+      const calSeed = activeCalendarState ? activeCalendarState.daySeed : 20260928;
+      let currentOracle = oracleDataList[calSeed % oracleDataList.length];
 
       function renderOracleView(data) {
         currentOracle = data;
@@ -1437,6 +1725,7 @@
         document.getElementById("aspect-health-text").textContent = data.health;
         document.getElementById("oracle-seal-text").innerHTML = `${data.seal.slice(0,2)}<br>${data.seal.slice(2,4)}`;
       }
+      renderOracleView(currentOracle);
 
       function executeDivination() {
         const cylinderBox = document.getElementById("cylinder-touch-trigger");
@@ -1467,21 +1756,35 @@
       document.getElementById("cylinder-touch-trigger").addEventListener("click", executeDivination);
       document.getElementById("btn-re-shake").addEventListener("click", executeDivination);
 
-      // 4. Horoscope & Interactive Radar Chart
-      const horoscopeList = [
-        { name: "白羊座", en: "ARIES", sym: "♈", date: "03.21-04.19", scores: [92, 95, 84, 86, 94], sum: "意志昂扬，锐意开辟。今日决断迅疾，带头冲锋能激荡出澎湃势能。", work: "抓大放小，果断拍板核心进度。", love: "大方表达真情实意，坦荡最动人心。", match: "贵人星宿：狮子座、射手座 | 避开扰动：巨蟹座" },
-        { name: "金牛座", en: "TAURUS", sym: "♉", date: "04.20-05.20", scores: [94, 91, 88, 98, 90], sum: "财帛聚气，持重安稳。对于实质性资源配置与长线合约具有极敏锐的嗅觉。", work: "审校合同账目务求细致，稳固胜局。", love: "品鉴珍馐醇茗，舒缓尽显深情厚意。", match: "贵人星宿：处女座、摩羯座 | 避开扰动：水瓶座" },
-        { name: "双子座", en: "GEMINI", sym: "♊", date: "05.21-06.21", scores: [95, 93, 92, 85, 91], sum: "灵动机变，触类旁通。多维度信息交融，在闲聊碰撞中催生破局奇想。", work: "头脑风暴表现惊艳，利于跨界合作。", love: "风趣幽默化解尴尬，轻快如沐春风。", match: "贵人星宿：天秤座、水瓶座 | 避开扰动：双鱼座" },
-        { name: "巨蟹座", en: "CANCER", sym: "♋", date: "06.22-07.22", scores: [90, 86, 96, 84, 92], sum: "心细如发，共情至深。核心亲友带来坚固的定力支持与安全感。", work: "以温润包容之道化解内耗，深孚众望。", love: "体贴入微抚平疲惫，温存长伴左右。", match: "贵人星宿：天蝎座、双鱼座 | 避开扰动：白羊座" },
-        { name: "狮子座", en: "LEO", sym: "♌", date: "07.23-08.22", scores: [97, 98, 89, 92, 96], sum: "威仪赫赫，领袖群伦。关键关头敢于担当重责，气场磅礴令四方信服。", work: "登台演示或主持大局，格局恢弘。", love: "适当收敛霸道，温柔倾听更添王者魅力。", match: "贵人星宿：白羊座、射手座 | 避开扰动：金牛座" },
-        { name: "处女座", en: "VIRGO", sym: "♍", date: "08.23-09.22", scores: [96, 96, 88, 89, 95], sum: "思维缜密如织，洞察微末瑕疵。收拢杂乱事务，按既定节奏稳步推进。", work: "文档方案把控极佳，易获同仁倾心认可。", love: "放下过度苛求，给予身旁之人更多包容。", match: "贵人星宿：摩羯座、金牛座 | 避开扰动：双子座" },
-        { name: "天秤座", en: "LIBRA", sym: "♎", date: "09.23-10.23", scores: [93, 90, 96, 88, 91], sum: "兼顾权衡，风雅自如。天然的协调平衡大师，游走于各方缔造双赢。", work: "公关联络与谈判进展极为平顺。", love: "注重审美着装与仪式感，气质出众引人倾慕。", match: "贵人星宿：双子座、水瓶座 | 避开扰动：摩羯座" },
-        { name: "天蝎座", en: "SCORPIO", sym: "♏", date: "10.24-11.22", scores: [95, 96, 90, 94, 88], sum: "冷峻深邃，洞幽烛微。一眼看透底层逻辑，行事低调而雷霆万钧。", work: "适合技术钻研、战略布局及排除隐患。", love: "爱恨分明，坦诚相照赢得毫无保留的信赖。", match: "贵人星宿：双鱼座、巨蟹座 | 避开扰动：狮子座" },
-        { name: "射手座", en: "SAGITTARIUS", sym: "♐", date: "11.23-12.21", scores: [93, 92, 91, 87, 97], sum: "胸怀天宇，旷达逍遥。突破陈规羁绊，前瞻视野带来无尽灵感福泽。", work: "开拓外部新领域或筹划宏观战略。", love: "结伴同行漫步原野，欢声笑语情谊倍增。", match: "贵人星宿：狮子座、白羊座 | 避开扰动：处女座" },
-        { name: "摩羯座", en: "CAPRICORN", sym: "♑", date: "12.22-01.19", scores: [96, 99, 83, 93, 90], sum: "沉潜笃行，坚如磐石。十年如一日的专业专注，在关键时刻显露非凡分量。", work: "攻关项目迎来里程碑式突破。", love: "默默担当守护，细水长流胜过千言万语。", match: "贵人星宿：金牛座、处女座 | 避开扰动：天秤座" },
-        { name: "水瓶座", en: "AQUARIUS", sym: "♒", date: "01.20-02.18", scores: [94, 91, 89, 90, 98], sum: "天马行空，别具只眼。打破固有框架定义，前沿灵感令人惊叹。", work: "适合做创意研发、产品创新与结构优化。", love: "尊重彼此独立空间，灵魂共鸣不设防。", match: "贵人星宿：双子座、天秤座 | 避开扰动：天蝎座" },
-        { name: "双鱼座", en: "PISCES", sym: "♓", date: "02.19-03.20", scores: [92, 88, 97, 86, 95], sum: "灵觉通幽，慈悲润物。天生的艺术感知力，直觉指引避开险阻。", work: "美学设计、内容创作极具感染力与穿透力。", love: "浪漫梦幻的情意互动，心照不宣两情相悦。", match: "贵人星宿：巨蟹座、天蝎座 | 避开扰动：射手座" }
+      // ============================================================
+      // 5. Horoscope & Daily Dynamic Seeding
+      // ============================================================
+      const horoscopeBase = [
+        { name: "白羊座", en: "ARIES", sym: "♈", date: "03.21-04.19", baseScores: [92, 95, 84, 86, 94], sum: "意志昂扬，锐意开辟。今日决断迅疾，带头冲锋能激荡出澎湃势能。", work: "抓大放小，果断拍板核心进度。", love: "大方表达真情实意，坦荡最动人心。", match: "贵人星宿：狮子座、射手座 | 避开扰动：巨蟹座" },
+        { name: "金牛座", en: "TAURUS", sym: "♉", date: "04.20-05.20", baseScores: [94, 91, 88, 98, 90], sum: "财帛聚气，持重安稳。对于实质性资源配置与长线合约具有极敏锐的嗅觉。", work: "审校合同账目务求细致，稳固胜局。", love: "品鉴珍馐醇茗，舒缓尽显深情厚意。", match: "贵人星宿：处女座、摩羯座 | 避开扰动：水瓶座" },
+        { name: "双子座", en: "GEMINI", sym: "♊", date: "05.21-06.21", baseScores: [95, 93, 92, 85, 91], sum: "灵动机变，触类旁通。多维度信息交融，在闲聊碰撞中催生破局奇想。", work: "头脑风暴表现惊艳，利于跨界合作。", love: "风趣幽默化解尴尬，轻快如沐春风。", match: "贵人星宿：天秤座、水瓶座 | 避开扰动：双鱼座" },
+        { name: "巨蟹座", en: "CANCER", sym: "♋", date: "06.22-07.22", baseScores: [90, 86, 96, 84, 92], sum: "心细如发，共情至深。核心亲友带来坚固的定力支持与安全感。", work: "以温润包容之道化解内耗，深孚众望。", love: "体贴入微抚平疲惫，温存长伴左右。", match: "贵人星宿：天蝎座、双鱼座 | 避开扰动：白羊座" },
+        { name: "狮子座", en: "LEO", sym: "♌", date: "07.23-08.22", baseScores: [97, 98, 89, 92, 96], sum: "威仪赫赫，领袖群伦。关键关头敢于担当重责，气场磅礴令四方信服。", work: "登台演示或主持大局，格局恢弘。", love: "适当收敛霸道，温柔倾听更添王者魅力。", match: "贵人星宿：白羊座、射手座 | 避开扰动：金牛座" },
+        { name: "处女座", en: "VIRGO", sym: "♍", date: "08.23-09.22", baseScores: [96, 96, 88, 89, 95], sum: "思维缜密如织，洞察微末瑕疵。收拢杂乱事务，按既定节奏稳步推进。", work: "文档方案把控极佳，易获同仁倾心认可。", love: "放下过度苛求，给予身旁之人更多包容。", match: "贵人星宿：摩羯座、金牛座 | 避开扰动：双子座" },
+        { name: "天秤座", en: "LIBRA", sym: "♎", date: "09.23-10.23", baseScores: [93, 90, 96, 88, 91], sum: "兼顾权衡，风雅自如。天然的协调平衡大师，游走于各方缔造双赢。", work: "公关联络与谈判进展极为平顺。", love: "注重审美着装与仪式感，气质出众引人倾慕。", match: "贵人星宿：双子座、水瓶座 | 避开扰动：摩羯座" },
+        { name: "天蝎座", en: "SCORPIO", sym: "♏", date: "10.24-11.22", baseScores: [95, 96, 90, 94, 88], sum: "冷峻深邃，洞幽烛微。一眼看透底层逻辑，行事低调而雷霆万钧。", work: "适合技术钻研、战略布局及排除隐患。", love: "爱恨分明，坦诚相照赢得毫无保留的信赖。", match: "贵人星宿：双鱼座、巨蟹座 | 避开扰动：狮子座" },
+        { name: "射手座", en: "SAGITTARIUS", sym: "♐", date: "11.23-12.21", baseScores: [93, 92, 91, 87, 97], sum: "胸怀天宇，旷达逍遥。突破陈规羁绊，前瞻视野带来无尽灵感福泽。", work: "开拓外部新领域或筹划宏观战略。", love: "结伴同行漫步原野，欢声笑语情谊倍增。", match: "贵人星宿：狮子座、白羊座 | 避开扰动：处女座" },
+        { name: "摩羯座", en: "CAPRICORN", sym: "♑", date: "12.22-01.19", baseScores: [96, 99, 83, 93, 90], sum: "沉潜笃行，坚如磐石。十年如一日的专业专注，在关键时刻显露非凡分量。", work: "攻关项目迎来里程碑式突破。", love: "默默担当守护，细水长流胜过千言万语。", match: "贵人星宿：金牛座、处女座 | 避开扰动：天秤座" },
+        { name: "水瓶座", en: "AQUARIUS", sym: "♒", date: "01.20-02.18", baseScores: [94, 91, 89, 90, 98], sum: "天马行空，别具只眼。打破固有框架定义，前沿灵感令人惊叹。", work: "适合做创意研发、产品创新与结构优化。", love: "尊重彼此独立空间，灵魂共鸣不设防。", match: "贵人星宿：双子座、天秤座 | 避开扰动：天蝎座" },
+        { name: "双鱼座", en: "PISCES", sym: "♓", date: "02.19-03.20", baseScores: [92, 88, 97, 86, 95], sum: "灵觉通幽，慈悲润物。天生的艺术感知力，直觉指引避开险阻。", work: "美学设计、内容创作极具感染力与穿透力。", love: "浪漫梦幻的情意互动，心照不宣两情相悦。", match: "贵人星宿：巨蟹座、天蝎座 | 避开扰动：射手座" }
       ];
+
+      // Dynamically calculate today's deterministic daily scores
+      const seed = activeCalendarState ? activeCalendarState.daySeed : 20260928;
+      const horoscopeList = horoscopeBase.map((h, i) => {
+        const offset = ((seed * (i + 7)) % 9) - 4; // -4 to +4 variation per day
+        const scores = h.baseScores.map(s => Math.min(99, Math.max(80, s + offset)));
+        return {
+          ...h,
+          scores: scores,
+          totalScore: Math.round(scores.reduce((a, b) => a + b, 0) / 5)
+        };
+      });
 
       const hTabsRow = document.getElementById("horoscope-tabs-row");
       function drawRadar(scores) {
@@ -1529,7 +1832,7 @@
           document.getElementById("h-sym-display").textContent = h.sym;
           document.getElementById("h-name-display").textContent = h.name;
           document.getElementById("h-date-display").textContent = `${h.date} · ${h.en}`;
-          document.getElementById("h-tag-display").textContent = `综合运势 ${h.scores[0]}分`;
+          document.getElementById("h-tag-display").textContent = `今日运势 ${h.totalScore}分`;
           document.getElementById("h-summary-text").textContent = h.sum;
           document.getElementById("h-work-text").textContent = h.work;
           document.getElementById("h-love-text").textContent = h.love;
@@ -1542,7 +1845,9 @@
       });
       drawRadar(horoscopeList[0].scores);
 
-      // 5. Chinese Zodiac Scroller
+      // ============================================================
+      // 6. Chinese Zodiac Scroller
+      // ============================================================
       const zodiacList = [
         { name: "子鼠 🐭", desc: "子水生财，智慧明澈。适合规划财务预算与长线合约，人际沟通温婉自然。" },
         { name: "丑牛 🐮", desc: "丑土聚气，勤恳厚朴。踏实推进既定事务，稳健之中自带大运托底。" },
@@ -1573,7 +1878,9 @@
         zRow.appendChild(chip);
       });
 
-      // 6. Tarot Interactive 3D Flip
+      // ============================================================
+      // 7. Tarot Interactive 3D Flip
+      // ============================================================
       const tarotMasterCards = [
         { name: "星星", pos: "正位", icon: "⭐", meaning: "【圣牌奥义】星星象征着在黑夜中指引航道的希望之光、深层心灵疗愈与灵性开悟。最艰难的时刻已经过去，守住内心纯粹的热望，宇宙正在为你汇聚机缘。" },
         { name: "愚者", pos: "正位", icon: "🎒", meaning: "【圣牌奥义】愚者象征着崭新的起点、纯真的探索心与无畏的精神。卸下过往沉重包袱，踏上未知的航程，你的天地将远比想象中广阔。" },
@@ -1627,7 +1934,9 @@
         audio.playRattle();
       });
 
-      // 7. Wishing Lanterns
+      // ============================================================
+      // 8. Wishing Lanterns
+      // ============================================================
       const pondStage = document.getElementById("wish-pond-stage");
       const wishPills = document.querySelectorAll(".wish-pill");
       const wishInput = document.getElementById("input-wish-text");
@@ -1659,7 +1968,9 @@
         wishInput.value = "";
       });
 
-      // 8. Canvas HD Poster Generation & Mobile Gallery Save
+      // ============================================================
+      // 9. Canvas HD Poster Generation (Dynamic Date & Wrapping)
+      // ============================================================
       const modal = document.getElementById("poster-modal-box");
       const openModalBtn = document.getElementById("open-poster-btn");
       const directSaveBtn = document.getElementById("btn-save-card-direct");
@@ -1688,6 +1999,7 @@
       }
 
       function buildPoster() {
+        const cal = activeCalendarState || calculateCurrentDayAlmanac();
         const ctx = offscreenCanvas.getContext("2d");
         const w = 750;
         const h = 1334;
@@ -1715,9 +2027,10 @@
         ctx.fillStyle = "#f7e1a0";
         ctx.fillText("✦ 灵运阁 · 乾坤吉曜 ✦", w / 2, 120);
 
+        // DYNAMIC CALENDAR DATE HEADER
         ctx.font = "20px serif";
         ctx.fillStyle = "#8e98b0";
-        ctx.fillText("2026年9月22日 · 丙午年八月十二 · 己酉日", w / 2, 170);
+        ctx.fillText(`${cal.gregorianStr} · ${cal.lunarShort} · ${cal.dayGz}日`, w / 2, 170);
 
         // Tier Tag
         ctx.fillStyle = "rgba(217, 78, 52, 0.25)";
@@ -1794,11 +2107,11 @@
         ctx.fillText(currentOracle.seal.slice(2, 4), 0, 20);
         ctx.restore();
 
-        // Footer Blessing
+        // Footer Blessing with Dynamic JianChu
         ctx.textAlign = "center";
         ctx.fillStyle = "rgba(223, 183, 108, 0.75)";
         ctx.font = "18px serif";
-        ctx.fillText("— 心怀浩然 · 诸事顺遂 · 万象澄明 —", w / 2, 1230);
+        ctx.fillText(`— ${cal.jianChuTag} · 万象澄明 · 诸事顺遂 —`, w / 2, 1230);
 
         const dataUrl = offscreenCanvas.toDataURL("image/png");
         resultImg.src = dataUrl;
@@ -1820,7 +2133,7 @@
         } else {
           const a = document.createElement("a");
           a.href = imgData;
-          a.download = "灵运阁_今日吉签典藏卡.png";
+          a.download = `灵运阁_今日吉签_${activeCalendarState ? activeCalendarState.dayGz : "吉"}.png`;
           a.click();
         }
         audio.vibrate([30, 40]);

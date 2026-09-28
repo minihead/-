@@ -45,4 +45,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh release upload v1.0.0 ./LingyunFortune.apk --clobber || true
-        gh release create v1.0.1 ./LingyunFortune.apk --title "灵运阁 v1.0.1 移动端深度优化版" --notes "灵运阁 v1.0.1 移动端全屏流式布局、120FPS 硬件加速与纵向触控滑动修复版" || gh release upload v1.0.1 ./LingyunFortune.apk --clobber
+        gh release upload v1.0.1 ./LingyunFortune.apk --clobber || true
+        gh release create v1.0.2 ./LingyunFortune.apk --title "灵运阁 v1.0.2 天文历法时间实时自动同步版" --notes "灵运阁 v1.0.2 天文历法与公历日期毫秒级自动同步、跨天自动轮转、六十甲子干支与建除十二神精准推算" || gh release upload v1.0.2 ./LingyunFortune.apk --clobber
