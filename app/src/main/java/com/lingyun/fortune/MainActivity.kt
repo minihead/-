@@ -162,8 +162,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun setupInsets()
-        setupWebView() {
+    private fun setupWebView() {
         webView.apply {
             setBackgroundColor(Color.parseColor("#07080E"))
             overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
