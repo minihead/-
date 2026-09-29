@@ -46,16 +46,17 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cat << 'NOTES' > release_notes.md
-        《星运灵签》v1.0.4 顶级光学晶体与充盈美学高定重构版：
-        1. 浑天仪天文星盘法阵：主祈运坛场增加浑天仪动态微光刻度环与莲花悬浮底座，神圣感与视觉景深拉满。
-        2. 消除界面空旷感：植入十二时辰天星流转轮（子丑寅卯吉凶速查）、每日玄冥金句、天象吉兆与三合解引卡。
-        3. 运势双轨升级：十二星座四维能量雷达（综合/灵感/事业/情感）+ 天象合轴与星轨共鸣；老黄历干支历法 + 彭祖百忌与十二神煞冲煞全解。
-        4. 塔罗三维洞察透镜：3D扇形展开与120fps正逆位立体翻转，【当下心境】【人际契机】【内在指引】深度解构 + 7天觉醒星辉打卡。
-        5. 悬浮液态玻璃Bottom Dock：采用次时代悬浮磨砂晶体底栏，支持432Hz真实铜钵与机械声学回弹。
+        《星运灵签》v1.0.5 运势大盘首页重构与生肖星轨全量动态版：
+        1. 默认首页升级为【今日运势】：打开即入高定双轨运势大盘，底部悬浮磨砂晶体 Dock 默认高亮【运势】，灵签/塔罗/祈福并列随心切换。
+        2. 十二星座全动态能量引擎：彻底解决“仅显示天蝎座”问题，白羊至双鱼十二星座完整动态演算（综合/灵感/事业/情感四维雷达、契合星座、能量宝石、天象合轴、灵修避坑穿搭全维度解析）。
+        3. 十二生肖专属运势全面恢复与强化：老黄历面板植入鼠至猪12生肖横向滑轨，一键切换专属岁运流转、四维指数、三合六合贵人、冲犯提醒与处事锦囊。
+        4. 融合万年老黄历与十二时辰吉凶全览：子丑寅卯辰巳午未申酉戌亥全时辰吉凶表（当前时辰高亮）、建除十二神、五行纳音、彭祖百忌与胎神占方。
+        5. 彻底消除界面空旷感：黄金比例卡片排版、三相时令能量流转、自适应系统农历与干支时间同步，打造顶级光学晶体质感。
         NOTES
 
         gh release upload v1.0.0 ./LingyunFortune.apk --clobber || true
         gh release upload v1.0.1 ./LingyunFortune.apk --clobber || true
         gh release upload v1.0.2 ./LingyunFortune.apk --clobber || true
         gh release upload v1.0.3 ./XingyunFortune.apk ./LingyunFortune.apk --clobber || true
-        gh release create v1.0.4 ./XingyunFortune.apk ./LingyunFortune.apk --title "星运灵签 v1.0.4 顶级光学晶体与充盈美学高定版" --notes-file release_notes.md || (gh release upload v1.0.4 ./XingyunFortune.apk --clobber && gh release upload v1.0.4 ./LingyunFortune.apk --clobber)
+        gh release upload v1.0.4 ./XingyunFortune.apk ./LingyunFortune.apk --clobber || true
+        gh release create v1.0.5 ./XingyunFortune.apk ./LingyunFortune.apk --title "星运灵签 v1.0.5 运势大盘首页与生肖星轨全量动态版" --notes-file release_notes.md || (gh release upload v1.0.5 ./XingyunFortune.apk --clobber && gh release upload v1.0.5 ./LingyunFortune.apk --clobber)

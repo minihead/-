@@ -500,11 +500,37 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .zodiac-pill-item.active {
+    .chinese-zodiac-ribbon-bar, .zodiac-ribbon-bar {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      margin-bottom: 8px;
+      padding-bottom: 2px;
+      flex-shrink: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    .chinese-zodiac-ribbon-bar::-webkit-scrollbar, .zodiac-ribbon-bar::-webkit-scrollbar { display: none; }
+
+    .czodiac-pill-item, .zodiac-pill-item {
+      font-size: 10px;
+      white-space: nowrap;
+      padding: 4px 9px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #8b92a3;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .czodiac-pill-item.active, .zodiac-pill-item.active {
       background: var(--theme-primary);
       color: var(--theme-btn-color);
       font-weight: 700;
       border-color: var(--theme-primary);
+      box-shadow: 0 2px 8px rgba(197, 160, 89, 0.35);
+    }
+    .haute-glass-card {
+      transition: opacity 0.2s ease, transform 0.2s ease;
     }
 
     .energy-radar-grid {
@@ -866,7 +892,7 @@
     <header class="app-top-bar">
       <div class="app-logo-title">
         <span>✦</span>
-        <span>星运灵签</span>
+        <span id="app-title-text">星运灵签 · 今日运势</span>
       </div>
       <div class="app-date-pill">
         <span id="top-date-text">9月29日 · 八月十九</span>
@@ -877,14 +903,14 @@
     <div class="app-screen-body" id="app-screen-scroll-body">
 
       <!-- Micro Celestial Atmospheric Ticker Bar -->
-      <div class="celestial-ticker-bar">
-        <span>✦ 岁时：<strong>乙巳年·寒露</strong></span>
-        <span>方位：<strong>喜神西北·财神正东</strong></span>
-        <span>气运：<strong>99.4%</strong></span>
+      <div class="celestial-ticker-bar" id="celestial-ticker">
+        <span>✦ 岁时：<strong id="ticker-gz">丙午年·寒露</strong></span>
+        <span>方位：<strong id="ticker-dir">喜神西北·财神正东</strong></span>
+        <span>气运：<strong id="ticker-potency">99.4%</strong></span>
       </div>
 
       <!-- ================= MODULE 1: DIVINE (摇签) ================= -->
-      <div class="module-view" id="view-divine">
+      <div class="module-view" id="view-divine" style="display: none;">
         <!-- Sacred Armillary Astrolabe Altar -->
         <div class="altar-sacred-stage">
           <svg class="astrolabe-bg" viewBox="0 0 200 200" fill="none">
@@ -1000,7 +1026,7 @@
       </div>
 
       <!-- ================= MODULE 2: FORTUNE / ALMANAC ================= -->
-      <div class="module-view" id="view-fortune" style="display: none;">
+      <div class="module-view" id="view-fortune" style="display: flex;">
         <div class="segmented-control">
           <button class="segment-tab active" id="tab-sub-zodiac">十二星座日运</button>
           <button class="segment-tab" id="tab-sub-almanac">生肖老黄历</button>
@@ -1008,88 +1034,180 @@
 
         <!-- Sub-Panel 1: Zodiac -->
         <div id="subview-zodiac">
-          <div class="zodiac-ribbon-bar">
-            <span class="zodiac-pill-item">♈ 白羊</span>
-            <span class="zodiac-pill-item">♉ 金牛</span>
-            <span class="zodiac-pill-item">♊ 双子</span>
-            <span class="zodiac-pill-item">♋ 巨蟹</span>
-            <span class="zodiac-pill-item">♌ 狮子</span>
-            <span class="zodiac-pill-item">♍ 处女</span>
-            <span class="zodiac-pill-item">♎ 天秤</span>
-            <span class="zodiac-pill-item active">♏ 天蝎</span>
-            <span class="zodiac-pill-item">♐ 射手</span>
-            <span class="zodiac-pill-item">♑ 摩羯</span>
-            <span class="zodiac-pill-item">♒ 水瓶</span>
-            <span class="zodiac-pill-item">♓ 双鱼</span>
+          <div class="zodiac-ribbon-bar" id="zodiac-ribbon">
+            <span class="zodiac-pill-item" data-sign="aries">♈ 白羊</span>
+            <span class="zodiac-pill-item" data-sign="taurus">♉ 金牛</span>
+            <span class="zodiac-pill-item" data-sign="gemini">♊ 双子</span>
+            <span class="zodiac-pill-item" data-sign="cancer">♋ 巨蟹</span>
+            <span class="zodiac-pill-item" data-sign="leo">♌ 狮子</span>
+            <span class="zodiac-pill-item" data-sign="virgo">♍ 处女</span>
+            <span class="zodiac-pill-item" data-sign="libra">♎ 天秤</span>
+            <span class="zodiac-pill-item active" data-sign="scorpio">♏ 天蝎</span>
+            <span class="zodiac-pill-item" data-sign="sagittarius">♐ 射手</span>
+            <span class="zodiac-pill-item" data-sign="capricorn">♑ 摩羯</span>
+            <span class="zodiac-pill-item" data-sign="aquarius">♒ 水瓶</span>
+            <span class="zodiac-pill-item" data-sign="pisces">♓ 双鱼</span>
           </div>
 
-          <div class="haute-glass-card">
+          <!-- Zodiac Main Card -->
+          <div class="haute-glass-card" id="zodiac-main-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 11.5px; color: var(--theme-primary); font-weight: 600;">✦ 天蝎座 Scorpio · 灵能觉醒</span>
-              <span style="font-family: var(--font-mono); font-size: 12px; color: #fff; font-weight: 700;">98分 极佳</span>
+              <span id="zodiac-title" style="font-size: 11.5px; color: var(--theme-primary); font-weight: 600;">✦ 天蝎座 Scorpio · 潜龙临渊 · 灵能觉醒</span>
+              <span id="zodiac-score-badge" style="font-family: var(--font-mono); font-size: 12px; color: #fff; font-weight: 700;">98分 绝尘</span>
             </div>
 
             <div class="energy-radar-grid">
               <div class="energy-metric-box">
-                <div class="metric-row"><span class="metric-label">综合指数</span><span class="metric-val">98%</span></div>
-                <div class="metric-track"><div class="metric-fill" style="width: 98%;"></div></div>
+                <div class="metric-row"><span class="metric-label">综合指数</span><span class="metric-val" id="zodiac-m-overall">98%</span></div>
+                <div class="metric-track"><div class="metric-fill" id="zodiac-bar-overall" style="width: 98%;"></div></div>
               </div>
               <div class="energy-metric-box">
-                <div class="metric-row"><span class="metric-label">灵感财帛</span><span class="metric-val">95%</span></div>
-                <div class="metric-track"><div class="metric-fill" style="width: 95%;"></div></div>
+                <div class="metric-row"><span class="metric-label">灵感财帛</span><span class="metric-val" id="zodiac-m-wealth">95%</span></div>
+                <div class="metric-track"><div class="metric-fill" id="zodiac-bar-wealth" style="width: 95%;"></div></div>
               </div>
               <div class="energy-metric-box">
-                <div class="metric-row"><span class="metric-label">事业天命</span><span class="metric-val">92%</span></div>
-                <div class="metric-track"><div class="metric-fill" style="width: 92%;"></div></div>
+                <div class="metric-row"><span class="metric-label">事业天命</span><span class="metric-val" id="zodiac-m-career">96%</span></div>
+                <div class="metric-track"><div class="metric-fill" id="zodiac-bar-career" style="width: 96%;"></div></div>
               </div>
               <div class="energy-metric-box">
-                <div class="metric-row"><span class="metric-label">情感共鸣</span><span class="metric-val">88%</span></div>
-                <div class="metric-track"><div class="metric-fill" style="width: 88%;"></div></div>
+                <div class="metric-row"><span class="metric-label">情感共鸣</span><span class="metric-val" id="zodiac-m-love">90%</span></div>
+                <div class="metric-track"><div class="metric-fill" id="zodiac-bar-love" style="width: 90%;"></div></div>
               </div>
             </div>
 
-            <div style="font-size: 11px; line-height: 1.55; color: #cad2df; margin-bottom: 6px;">
+            <div id="zodiac-desc" style="font-size: 11px; line-height: 1.55; color: #cad2df; margin-bottom: 6px;">
               深海潮汐与星轨交织，直觉敏锐洞若观火。排除外界杂音，聚焦核心支点，执行不可逆突进。
             </div>
 
             <div class="synastry-row">
-              <div class="synastry-pill"><span style="color: #8b92a3;">契合星座:</span><strong>♋ 巨蟹 99%</strong></div>
-              <div class="synastry-pill"><span style="color: #8b92a3;">能量宝石:</span><strong>坦桑蓝宝</strong></div>
-              <div class="synastry-pill"><span style="color: #8b92a3;">幸运色:</span><strong>香槟冷金</strong></div>
-              <div class="synastry-pill"><span style="color: #8b92a3;">幸运数:</span><strong>7 / 18</strong></div>
+              <div class="synastry-pill"><span style="color: #8b92a3;">契合星座:</span><strong id="zodiac-match">♋ 巨蟹 99%</strong></div>
+              <div class="synastry-pill"><span style="color: #8b92a3;">能量宝石:</span><strong id="zodiac-stone">坦桑蓝宝</strong></div>
+              <div class="synastry-pill"><span style="color: #8b92a3;">幸运色:</span><strong id="zodiac-color">香槟冷金</strong></div>
+              <div class="synastry-pill"><span style="color: #8b92a3;">幸运数:</span><strong id="zodiac-num">7 / 18</strong></div>
             </div>
 
             <div style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 5px; margin-top: 6px; font-size: 9.5px; color: #9da5b6; display: flex; justify-content: space-between;">
-              <span>✦ <strong>天象合轴</strong>：水星拱木星 · 诸事得力</span>
-              <span>✦ <strong>灵感吉时</strong>：14:00 - 16:00</span>
+              <span id="zodiac-transit">✦ <strong>天象合轴</strong>：水星拱木星 · 诸事得力</span>
+              <span id="zodiac-lucky-time">✦ <strong>灵感吉时</strong>：14:00 - 16:00</span>
             </div>
           </div>
 
-          <div class="haute-glass-card">
+          <!-- Zodiac Deep Advice Card -->
+          <div class="haute-glass-card" id="zodiac-guide-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
               <span style="font-size: 11px; color: var(--theme-primary); font-weight: 600;">✦ 星轨运势综评与开运锦囊</span>
-              <span style="font-size: 9px; color: #80ed99; background: rgba(56,176,0,0.12); padding: 1px 5px; border-radius: 4px;">极佳机缘</span>
+              <span id="zodiac-guide-tag" style="font-size: 9px; color: #80ed99; background: rgba(56,176,0,0.12); padding: 1px 5px; border-radius: 4px;">灵力巅峰</span>
             </div>
-            <div style="font-size: 10px; color: #cad2df; line-height: 1.55;">
-              ✦ <strong>灵修指引</strong>：直觉敏锐度达到本月周期峰值，适合进行重大规划、创意构想与关键决策。<br>
-              ✦ <strong>避坑提点</strong>：水星逆行余波尚存，沟通交接时多核对细节，避免先入为主的主观臆断。<br>
-              ✦ <strong>开运心法</strong>：随身佩戴冷金质感饰物或水晶，有助于稳固自身磁场，聚敛正向灵能。
+            <div id="zodiac-guide-body" style="font-size: 10px; color: #cad2df; line-height: 1.55;">
+              ✦ <strong>灵修指引</strong>：静坐观照潜意识涌动，关键决策以第一直觉为准绳，定力胜过千军万马。<br>
+              ✦ <strong>避坑提点</strong>：戒除过度防备与试探，真诚信任是最高级的掌控，轻装方能致远。<br>
+              ✦ <strong>穿搭开运</strong>：随身佩戴冷金质感饰物或黑曜石，稳固自身磁场，聚敛玄冥正能。
+            </div>
+          </div>
+
+          <!-- Card 3: Cosmic Quadrant & Daily Path (丰富排版消除空旷) -->
+          <div class="haute-glass-card" id="zodiac-path-card" style="margin-bottom: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+              <span style="font-size: 11px; color: var(--theme-primary); font-weight: 600;">✦ 今日星轨流转与三相时令</span>
+              <span style="font-size: 9px; color: #fae6b8; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px;">三维时相</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; font-size: 9.5px; text-align: center;">
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 4px 2px;">
+                <div style="color: #9da5b6; font-size: 8.5px;">清晨 · 启明星相</div>
+                <div style="color: #fae6b8; font-weight: 600; margin: 2px 0;">定力凝聚</div>
+                <div style="color: #8b92a3; font-size: 8px;">梳理关键支点</div>
+              </div>
+              <div style="background: rgba(197,160,89,0.12); border: 1px solid rgba(197,160,89,0.3); border-radius: 6px; padding: 4px 2px;">
+                <div style="color: #fae6b8; font-size: 8.5px;">午后 · 烈曜中天</div>
+                <div style="color: #fff; font-weight: 700; margin: 2px 0;">势能爆发</div>
+                <div style="color: #80ed99; font-size: 8px;">决策执行攻坚</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 4px 2px;">
+                <div style="color: #9da5b6; font-size: 8.5px;">薄暮 · 月曜归真</div>
+                <div style="color: #fae6b8; font-weight: 600; margin: 2px 0;">灵感沉淀</div>
+                <div style="color: #8b92a3; font-size: 8px;">反躬自省复盘</div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Sub-Panel 2: Almanac -->
         <div id="subview-almanac" style="display: none;">
-          <div class="haute-glass-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-              <span style="font-size: 11.5px; color: var(--theme-primary); font-weight: 600;">✦ 岁时干支历</span>
-              <span style="font-size: 10px; background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; color: #fae6b8;">丙午日 · 收日</span>
+          <!-- Chinese Zodiac Ribbon Bar (12生肖滑轨) -->
+          <div class="chinese-zodiac-ribbon-bar" id="chinese-zodiac-ribbon">
+            <span class="czodiac-pill-item" data-sign="rat">🐭 鼠</span>
+            <span class="czodiac-pill-item" data-sign="ox">🐮 牛</span>
+            <span class="czodiac-pill-item" data-sign="tiger">🐯 虎</span>
+            <span class="czodiac-pill-item" data-sign="rabbit">🐰 兔</span>
+            <span class="czodiac-pill-item active" data-sign="dragon">🐲 龙</span>
+            <span class="czodiac-pill-item" data-sign="snake">🐍 蛇</span>
+            <span class="czodiac-pill-item" data-sign="horse">🐴 马</span>
+            <span class="czodiac-pill-item" data-sign="goat">🐑 羊</span>
+            <span class="czodiac-pill-item" data-sign="monkey">🐵 猴</span>
+            <span class="czodiac-pill-item" data-sign="rooster">🐔 鸡</span>
+            <span class="czodiac-pill-item" data-sign="dog">🐶 狗</span>
+            <span class="czodiac-pill-item" data-sign="pig">🐷 猪</span>
+          </div>
+
+          <!-- Card 1: Chinese Zodiac Exclusive Horoscope (生肖专属运势卡) -->
+          <div class="haute-glass-card" id="czodiac-main-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span id="czodiac-title" style="font-size: 11.5px; color: var(--theme-primary); font-weight: 600;">✦ 属龙 · 辰土 · 潜龙凌云 · 祥瑞捧日</span>
+              <span id="czodiac-score-badge" style="font-family: var(--font-mono); font-size: 12px; color: #fff; font-weight: 700;">97分 极吉</span>
             </div>
 
-            <div style="font-family: var(--font-display); font-size: 15px; color: #fff; font-weight: 600; margin-bottom: 3px;">
+            <!-- 4-dim metrics -->
+            <div class="energy-radar-grid">
+              <div class="energy-metric-box">
+                <div class="metric-row"><span class="metric-label">事业晋升</span><span class="metric-val" id="czodiac-m-career">98%</span></div>
+                <div class="metric-track"><div class="metric-fill" id="czodiac-bar-career" style="width: 98%;"></div></div>
+              </div>
+              <div class="energy-metric-box">
+                <div class="metric-row"><span class="metric-label">正偏财运</span><span class="metric-val" id="czodiac-m-wealth">95%</span></div>
+                <div class="metric-track"><div class="metric-fill" id="czodiac-bar-wealth" style="width: 95%;"></div></div>
+              </div>
+              <div class="energy-metric-box">
+                <div class="metric-row"><span class="metric-label">贵人扶持</span><span class="metric-val" id="czodiac-m-noble">96%</span></div>
+                <div class="metric-track"><div class="metric-fill" id="czodiac-bar-noble" style="width: 96%;"></div></div>
+              </div>
+              <div class="energy-metric-box">
+                <div class="metric-row"><span class="metric-label">身心安泰</span><span class="metric-val" id="czodiac-m-health">95%</span></div>
+                <div class="metric-track"><div class="metric-fill" id="czodiac-bar-health" style="width: 95%;"></div></div>
+              </div>
+            </div>
+
+            <div id="czodiac-desc" style="font-size: 11px; line-height: 1.55; color: #cad2df; margin-bottom: 6px;">
+              辰土培厚土生金，午阳温润照命。今日灵感如泉涌，重大决策一针见血，贵人四方云集。
+            </div>
+
+            <div class="synastry-row">
+              <div class="synastry-pill"><span style="color: #8b92a3;">六合贵人:</span><strong id="czodiac-he">🐔 生肖鸡</strong></div>
+              <div class="synastry-pill"><span style="color: #8b92a3;">三合贵人:</span><strong id="czodiac-sanhe">🐵 猴 / 🐭 鼠</strong></div>
+              <div class="synastry-pill"><span style="color: #8b92a3;">开运吉位:</span><strong id="czodiac-pos">东南 / 正西</strong></div>
+              <div class="synastry-pill"><span style="color: #8b92a3;">开运法宝:</span><strong id="czodiac-item">青金石印章</strong></div>
+            </div>
+
+            <div style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 5px; margin-top: 6px; font-size: 9.5px; color: #9da5b6; display: flex; justify-content: space-between;">
+              <span id="czodiac-clash">✦ <strong>冲忌提醒</strong>：与【生肖狗】相冲，胸怀宽广勿对旧事耿耿于怀</span>
+              <span id="czodiac-lucky-color">✦ <strong>吉祥色</strong>：香槟金、暖琥珀</span>
+            </div>
+            
+            <div style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 5px; margin-top: 5px; font-size: 9.5px; color: #fae6b8; line-height: 1.5;" id="czodiac-tips">
+              ✦ <strong>处事锦囊</strong>：统筹全局谋定而后动，今日是敲定关键方向、签约启动的良辰吉日。
+            </div>
+          </div>
+
+          <!-- Card 2: 传统老黄历岁时干支大盘 -->
+          <div class="haute-glass-card" id="almanac-calendar-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+              <span style="font-size: 11.5px; color: var(--theme-primary); font-weight: 600;">✦ 岁时干支与万年老黄历</span>
+              <span id="almanac-day-tag" style="font-size: 10px; background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; color: #fae6b8;">丙午日 · 收日</span>
+            </div>
+
+            <div id="almanac-gz-header" style="font-family: var(--font-display); font-size: 15px; color: #fff; font-weight: 600; margin-bottom: 3px;">
               丙午年 丁酉月 丙午日
             </div>
-            <div style="font-size: 10.5px; color: #8b92a3; margin-bottom: 6px;">
+            <div id="almanac-gz-detail" style="font-size: 10.5px; color: #8b92a3; margin-bottom: 6px;">
               五行：天河水 · 冲煞：冲鼠煞北 · 建除十二神：收日归仓
             </div>
 
@@ -1099,11 +1217,11 @@
             </div>
 
             <div style="font-size: 10px; color: #cad2df; background: rgba(255,255,255,0.03); padding: 5px 7px; border-radius: 6px; margin-bottom: 6px;">
-              吉神方位：喜神西北 · 财神正东 · 福神西南
+              吉神方位：喜神西北 · 财神正东 · 福神西南 · 贵神正西
             </div>
 
             <div style="font-size: 9.5px; color: #fae6b8; margin-bottom: 4px; font-weight: 600; display: flex; justify-content: space-between;">
-              <span>✦ 十二时辰黄道吉凶</span>
+              <span>✦ 十二时辰黄道吉凶全览</span>
               <span style="color: #8b92a3; font-weight: normal;">今日值神：青龙</span>
             </div>
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 6px;">
@@ -1115,15 +1233,15 @@
               <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; padding: 2px 4px; text-align: center; font-size: 8.5px; color: #8b92a3;">巳时·天德[平]</div>
               <div style="background: rgba(197,160,89,0.2); border: 1px solid var(--theme-primary); border-radius: 4px; padding: 2px 4px; text-align: center; font-size: 8.5px; color: #fae6b8; font-weight: bold;">午时·吉曜[今]</div>
               <div style="background: rgba(56,176,0,0.1); border: 1px solid rgba(56,176,0,0.25); border-radius: 4px; padding: 2px 4px; text-align: center; font-size: 8.5px; color: #80ed99;">未时·玉堂[吉]</div>
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; padding: 2px 4px; text-align: center; font-size: 8.5px; color: #8b92a3;">申时·白虎[凶]</div>
+              <div style="background: rgba(56,176,0,0.1); border: 1px solid rgba(56,176,0,0.25); border-radius: 4px; padding: 2px 4px; text-align: center; font-size: 8.5px; color: #80ed99;">酉时·玉堂[吉]</div>
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; padding: 2px 4px; text-align: center; font-size: 8.5px; color: #8b92a3;">戌时·天牢[凶]</div>
+              <div style="background: rgba(56,176,0,0.1); border: 1px solid rgba(56,176,0,0.25); border-radius: 4px; padding: 2px 4px; text-align: center; font-size: 8.5px; color: #80ed99;">亥时·玄武[吉]</div>
             </div>
 
             <div style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 6px; margin-top: 6px; font-size: 9.5px; color: #cad2df; line-height: 1.5;">
               ✦ <strong>冲煞全解</strong>：冲鼠煞北 · 属鼠者今日宜沉静安守，诸事以稳为上，不宜涉险激进。<br>
               ✦ <strong>胎神占方</strong>：房床碓 外正东 · 家有孕妇者不宜轻易修造或迁动床榻家具。<br>
-              ✦ <strong>财神正东</strong>：今日求财纳福利于东方，行事得心应手，百事亨通。
-            </div>
-
-            <div style="font-size: 9.5px; color: #9da5b6; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 5px; margin-top: 5px;">
               ✦ <strong>彭祖百忌</strong>：丙不修灶 必见灾殃 · 午不苫盖 屋主更张
             </div>
           </div>
@@ -1133,7 +1251,7 @@
           📜 生成今日专属高定运势卡
         </button>
       </div>
-      
+
       <!-- ================= MODULE 3: TAROT ================= -->
       <div class="module-view" id="view-tarot" style="display: none;">
         <div class="wisdom-quote-strip">
@@ -1280,14 +1398,14 @@
 
     <!-- FLOATING FROSTED GLASS BOTTOM DOCK -->
     <nav class="floating-bottom-dock">
-      <button class="dock-tab-btn active" data-mod="divine">
-        <span class="dock-icon">🎋</span>
-        <span class="dock-label">灵签</span>
-        <span class="dock-active-dot"></span>
-      </button>
-      <button class="dock-tab-btn" data-mod="fortune">
+      <button class="dock-tab-btn active" data-mod="fortune">
         <span class="dock-icon">🌌</span>
         <span class="dock-label">运势</span>
+        <span class="dock-active-dot"></span>
+      </button>
+      <button class="dock-tab-btn" data-mod="divine">
+        <span class="dock-icon">🎋</span>
+        <span class="dock-label">灵签</span>
         <span class="dock-active-dot"></span>
       </button>
       <button class="dock-tab-btn" data-mod="tarot">
@@ -1424,13 +1542,79 @@
     }
 
     // ==========================================
-    // 2. LIVE TIME & DATE SYNCHRONIZATION
+    // 2. LIVE TIME & DATE SYNCHRONIZATION & PERPETUAL CALENDAR ENGINE
     // ==========================================
-    function updateClock() {
+    function getLiveCalendarInfo() {
       const now = new Date();
+      const year = now.getFullYear();
       const month = now.getMonth() + 1;
       const day = now.getDate();
-      document.getElementById('top-date-text').innerText = `${month}月${day}日 · 八月十九`;
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+
+      let lunarStr = '八月十九';
+      let yearGanZhi = '丙午';
+      const LUNAR_DAYS = [
+        "初一","初二","初三","初四","初五","初六","初七","初八","初九","初十",
+        "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十",
+        "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"
+      ];
+      try {
+        const fmt = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+        const parts = fmt.formatToParts(now);
+        let m = '', d = '';
+        parts.forEach(p => {
+          if (p.type === 'yearName') yearGanZhi = p.value;
+          if (p.type === 'month') m = p.value;
+          if (p.type === 'day') {
+            const num = parseInt(p.value, 10);
+            d = (!isNaN(num) && num >= 1 && num <= 30) ? LUNAR_DAYS[num - 1] : p.value;
+          }
+        });
+        if (m && d) lunarStr = m + d;
+      } catch (e) {}
+
+      const JIA_ZI = [
+        "甲子","乙丑","丙寅","丁卯","戊辰","己巳","庚午","辛未","壬申","癸酉",
+        "甲戌","乙亥","丙子","丁丑","戊寅","己卯","庚辰","辛巳","壬午","癸未",
+        "甲申","乙酉","丙戌","丁亥","戊子","己丑","庚寅","辛卯","壬辰","癸巳",
+        "甲午","乙未","丙申","丁酉","戊戌","己亥","庚子","辛丑","壬寅","癸卯",
+        "甲辰","乙巳","丙午","丁未","戊申","己酉","庚戌","辛亥","壬子","癸丑",
+        "甲寅","乙卯","丙辰","丁巳","戊午","己未","庚申","辛酉","壬戌","癸亥"
+      ];
+      const refMidnight = new Date(2026, 8, 29).getTime();
+      const currentMidnight = new Date(year, month - 1, day).getTime();
+      const dayDiff = Math.round((currentMidnight - refMidnight) / 86400000);
+      const dayIndex = ((42 + dayDiff) % 60 + 60) % 60;
+      const dayGanZhi = JIA_ZI[dayIndex];
+
+      return {
+        year, month, day, hours, minutes,
+        lunarStr, yearGanZhi, dayGanZhi,
+        fullDateStr: `${month}月${day}日 · ${lunarStr}`
+      };
+    }
+
+    function updateClock() {
+      const cal = getLiveCalendarInfo();
+      const topDate = document.getElementById('top-date-text');
+      if (topDate) topDate.innerText = cal.fullDateStr;
+
+      const phoneTime = document.getElementById('live-phone-time');
+      if (phoneTime) phoneTime.innerText = `${cal.hours}:${cal.minutes}`;
+
+      const tickerGz = document.getElementById('ticker-gz');
+      if (tickerGz) tickerGz.innerText = `${cal.yearGanZhi}年·${cal.dayGanZhi}日`;
+
+      const almHeader = document.getElementById('almanac-gz-header');
+      if (almHeader) almHeader.innerText = `${cal.yearGanZhi}年 丁酉月 ${cal.dayGanZhi}日`;
+
+      const almTag = document.getElementById('almanac-day-tag');
+      if (almTag) almTag.innerText = `${cal.dayGanZhi}日 · 祥瑞`;
     }
     updateClock();
     setInterval(updateClock, 30000);
@@ -1440,11 +1624,20 @@
     // ==========================================
     const dockButtons = document.querySelectorAll('.dock-tab-btn');
     const moduleViews = {
-      'divine': document.getElementById('view-divine'),
       'fortune': document.getElementById('view-fortune'),
+      'divine': document.getElementById('view-divine'),
       'tarot': document.getElementById('view-tarot'),
       'lantern': document.getElementById('view-lantern')
     };
+
+    const moduleTitles = {
+      'fortune': '星运灵签 · 今日运势',
+      'divine': '星运灵签 · 摇签求吉',
+      'tarot': '星运灵签 · 每日塔罗',
+      'lantern': '星运灵签 · 祈福明灯'
+    };
+
+    let currentModule = 'fortune';
 
     dockButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1452,6 +1645,7 @@
         btn.classList.add('active');
 
         const targetMod = btn.dataset.mod;
+        currentModule = targetMod;
         Object.keys(moduleViews).forEach(key => {
           if (key === targetMod) {
             moduleViews[key].style.display = 'flex';
@@ -1460,8 +1654,14 @@
           }
         });
 
-        document.getElementById('app-screen-scroll-body').scrollTop = 0;
-        playTibetanBowl(targetMod === 'tarot' ? 528 : 432);
+        const titleEl = document.getElementById('app-title-text');
+        if (titleEl && moduleTitles[targetMod]) {
+          titleEl.innerText = moduleTitles[targetMod];
+        }
+
+        const scrollEl = document.getElementById('app-screen-scroll-body');
+        if (scrollEl) scrollEl.scrollTop = 0;
+        playTibetanBowl(targetMod === 'tarot' ? 528 : (targetMod === 'divine' ? 432 : 396));
       });
     });
 
@@ -1487,18 +1687,410 @@
       playBambooStick();
     });
 
-    // Zodiac Ribbon Pill Selector
+    // ==========================================
+    // 4. DATA ENGINE & SELECTOR LOGIC
+    // ==========================================
+
+    // ==========================================
+    // COMPLETE 12 WESTERN ZODIAC ASTROLOGICAL DATA ENGINE
+    // ==========================================
+    const ZODIAC_DATA = {
+      aries: {
+        icon: '♈', name: '白羊座', en: 'Aries', title: '炎阳破晓 · 锐意拓新',
+        score: 96, level: '极佳 · 鸿运当头',
+        mOverall: 96, mWealth: 92, mCareer: 98, mLove: 88,
+        desc: '火星与木星呈三合吉相，锐意进取之心势如破竹。今日敢于亮剑，开局即决胜，多有破局成事之功。',
+        match: '♌ 狮子 98%', stone: '极光红宝', color: '曜金绯红', number: '3 / 9',
+        transit: '火星拱木星 · 诸事得力', luckyTime: '09:00 - 11:00',
+        guideTag: '极佳机缘',
+        guideBody: '✦ <strong>灵修指引</strong>：晨间面向东方深呼吸，点燃内在自信原力，果断推动搁置已久的关键项目。<br>✦ <strong>避坑提点</strong>：戒急躁冒进，与伙伴沟通时多倾听两秒，刚柔并济方显领袖气度。<br>✦ <strong>穿搭开运</strong>：随身佩戴红色或暖金色金属饰物，助燃命盘气场，诸事雷厉风行。'
+      },
+      taurus: {
+        icon: '♉', name: '金牛座', en: 'Taurus', title: '沃野凝金 · 沉稳笃行',
+        score: 94, level: '大吉 · 稳操胜券',
+        mOverall: 94, mWealth: 97, mCareer: 90, mLove: 92,
+        desc: '金星坐镇财帛宫，正偏财运势稳健上扬。厚积薄发，静水深流见真章，踏实耕耘必获丰厚馈赠。',
+        match: '♍ 处女 96%', stone: '天然祖母绿', color: '旷野橄榄绿', number: '6 / 15',
+        transit: '金星六合土星 · 根基稳固', luckyTime: '13:00 - 15:00',
+        guideTag: '财气凝聚',
+        guideBody: '✦ <strong>灵修指引</strong>：适时整理工位与财务账目，清晰的数据与秩序感将带来极度笃定的安全感。<br>✦ <strong>避坑提点</strong>：面对临时工作流变动切勿抗拒抵触，适度灵活应变方能立于不败之地。<br>✦ <strong>穿搭开运</strong>：案头摆置一株常青植物或铜质摆件，聚敛八方丰裕财气。'
+      },
+      gemini: {
+        icon: '♊', name: '双子座', en: 'Gemini', title: '灵枢生风 · 妙悟千机',
+        score: 95, level: '上吉 · 奇思顿开',
+        mOverall: 95, mWealth: 94, mCareer: 93, mLove: 95,
+        desc: '水星跃动于灵慧轴线，信息流速倍增。巧思频发，言谈间尽是契机，人际网络拓展事半功倍。',
+        match: '♒ 水瓶 97%', stone: '金发晶黄玉', color: '澄澈天青', number: '5 / 14',
+        transit: '水星拱天王星 · 巧思通玄', luckyTime: '10:00 - 12:00',
+        guideTag: '灵感如潮',
+        guideBody: '✦ <strong>灵修指引</strong>：随手记录脑海中一闪而过的火花，今日的一则小灵感未来或成突破性杰作。<br>✦ <strong>避坑提点</strong>：避免精力过度分散在琐碎事务中，选中一个最核心支点集中打透。<br>✦ <strong>穿搭开运</strong>：选用金属细线条配饰或天青色系单品，调和磁场，思路愈发明澈。'
+      },
+      cancer: {
+        icon: '♋', name: '巨蟹座', en: 'Cancer', title: '月曜澄泉 · 润泽万方',
+        score: 93, level: '祥和 · 灵觉自生',
+        mOverall: 93, mWealth: 89, mCareer: 91, mLove: 98,
+        desc: '深层潮汐与心弦共振，同理心与敏锐直觉达到周期峰值。安顿内在精神家园，福泽自润四方。',
+        match: '♓ 双鱼 99%', stone: '天然月光石', color: '珠光银白', number: '2 / 7',
+        transit: '月亮三合木星 · 慈怀感通', luckyTime: '19:00 - 21:00',
+        guideTag: '温润安泰',
+        guideBody: '✦ <strong>灵修指引</strong>：为自己或亲友烹煮一盏暖茶，温润静谧的日常当下即是最佳的精神守护结界。<br>✦ <strong>避坑提点</strong>：勿过度替他人承担情绪包袱，优雅划定心理边界，守护自身心神清明。<br>✦ <strong>穿搭开运</strong>：佩戴珍珠或银质微光配饰，温润如玉，抚平波澜，聚拢贵人福运。'
+      },
+      leo: {
+        icon: '♌', name: '狮子座', en: 'Leo', title: '烈曜凌霄 · 赫赫生辉',
+        score: 97, level: '盛极 · 雄视全场',
+        mOverall: 97, mWealth: 93, mCareer: 99, mLove: 90,
+        desc: '太阳正位天顶，耀如烈火。领袖魅力与决断力全开，登高一呼从者如云，适合主导关键战局。',
+        match: '♈ 白羊 98%', stone: '金珀蜜蜡', color: '帝王灿金', number: '1 / 8',
+        transit: '太阳拱火星 · 豪情展布', luckyTime: '11:00 - 13:00',
+        guideTag: '领袖天命',
+        guideBody: '✦ <strong>灵修指引</strong>：在团队或公众前从容展现宏图愿景，纯正的内在气场将感召最强劲的盟友。<br>✦ <strong>避坑提点</strong>：包容不同意见，将掌声化为前行阶梯，切莫因一时光环错失真知灼见。<br>✦ <strong>穿搭开运</strong>：金色表盘或金属腕带随身，豪气威严中更添沉着大气，吸引尊贵机遇。'
+      },
+      virgo: {
+        icon: '♍', name: '处女座', en: 'Virgo', title: '玉尺量天 · 纤尘不染',
+        score: 92, level: '精进 · 洞若观火',
+        mOverall: 92, mWealth: 91, mCareer: 96, mLove: 87,
+        desc: '水星沉入精微细分之境，洞察秋毫。千头万绪中抽丝剥茧，瞬间梳理出严谨秩序与高效通路。',
+        match: '♑ 摩羯 95%', stone: '克什米尔蓝宝', color: '冷雾霜灰', number: '4 / 16',
+        transit: '水星三合土星 · 严谨笃密', luckyTime: '14:00 - 16:00',
+        guideTag: '秩序井然',
+        guideBody: '✦ <strong>灵修指引</strong>：梳理流程闭环与交付细节，你的极致精益在今日将化为他人难以企及的专业壁垒。<br>✦ <strong>避坑提点</strong>：对人对己勿苛求十全十美，八分完备即可推进行动，留两分空间交由实践优化。<br>✦ <strong>穿搭开运</strong>：选用极简低饱和灰白单品，条理分明，神思清爽，聚神化气。'
+      },
+      libra: {
+        icon: '♎', name: '天秤座', en: 'Libra', title: '钧天悬衡 · 雍容和合',
+        score: 95, level: '融洽 · 如沐春风',
+        mOverall: 95, mWealth: 93, mCareer: 92, mLove: 97,
+        desc: '金星引动优雅谐波，人际磁场舒缓宜人。化干戈为玉帛，左右逢源，协作合作顺畅无碍。',
+        match: '♊ 双子 96%', stone: '玫瑰粉晶', color: '粉晶香槟', number: '6 / 24',
+        transit: '金星合海王星 · 美学共鸣', luckyTime: '15:00 - 17:00',
+        guideTag: '良缘聚合',
+        guideBody: '✦ <strong>灵修指引</strong>：主动与关键同伴或潜在合作方交流，真诚体贴的同理心将促成事半功倍的双赢。<br>✦ <strong>避坑提点</strong>：重大决断前切勿犹豫摇摆，以核心长远价值为法码，从容果断落子。<br>✦ <strong>穿搭开运</strong>：佩戴线条对称柔和的温润饰品，举手投足尽展温雅，贵人自来相助。'
+      },
+      scorpio: {
+        icon: '♏', name: '天蝎座', en: 'Scorpio', title: '潜龙临渊 · 灵能觉醒',
+        score: 98, level: '绝尘 · 洞穿虚妄',
+        mOverall: 98, mWealth: 95, mCareer: 96, mLove: 90,
+        desc: '深海潮汐与星轨交织，直觉敏锐洞若观火。排除外界杂音，聚焦核心支点，执行不可逆突进。',
+        match: '♋ 巨蟹 99%', stone: '坦桑蓝宝', color: '香槟冷金', number: '7 / 18',
+        transit: '水星拱木星 · 诸事得力', luckyTime: '14:00 - 16:00',
+        guideTag: '灵力巅峰',
+        guideBody: '✦ <strong>灵修指引</strong>：静坐观照潜意识涌动，关键决策以第一直觉为准绳，定力胜过千军万马。<br>✦ <strong>避坑提点</strong>：戒除过度防备与试探，真诚信任是最高级的掌控，轻装方能致远。<br>✦ <strong>穿搭开运</strong>：随身佩戴冷金质感饰物或黑曜石，稳固自身磁场，聚敛玄冥正能。'
+      },
+      sagittarius: {
+        icon: '♐', name: '射手座', en: 'Sagittarius', title: '惊鸿掠野 · 扶摇九万',
+        score: 96, level: '腾达 · 鹏程万里',
+        mOverall: 96, mWealth: 94, mCareer: 95, mLove: 91,
+        desc: '木星拱照命宫，格局大开，胸怀万里。远方吉讯频传，迈步皆是坦途，跨界探索大有所成。',
+        match: '♈ 白羊 97%', stone: '天然绿松石', color: '晴空蔚蓝', number: '9 / 21',
+        transit: '木星拱太阳 · 鸿鹄展翼', luckyTime: '08:00 - 10:00',
+        guideTag: '远景高蹈',
+        guideBody: '✦ <strong>灵修指引</strong>：跳出局部局限，站在未来数年的宏观维度推演路径，广阔心胸能消弭一切障碍。<br>✦ <strong>避坑提点</strong>：宏伟设想务必扎下第一颗基石，避免空谈构想而欠缺落地细节。<br>✦ <strong>穿搭开运</strong>：佩戴天然绿松石或皮质手环，增添洒脱英气，吸引四方吉友来助。'
+      },
+      capricorn: {
+        icon: '♑', name: '摩羯座', en: 'Capricorn', title: '昆仑砥柱 · 功不唐捐',
+        score: 94, level: '坚实 · 势如磐石',
+        mOverall: 94, mWealth: 93, mCareer: 98, mLove: 86,
+        desc: '土星正位，根深叶茂。岁月不会辜负每一份笃行实干，长线布局迎来破土拔节的爆发时刻。',
+        match: '♉ 金牛 96%', stone: '黑玉墨晶', color: '玄黑墨金', number: '8 / 26',
+        transit: '土星六合金星 · 坚不可摧', luckyTime: '16:00 - 18:00',
+        guideTag: '长线功成',
+        guideBody: '✦ <strong>灵修指引</strong>：复盘近期的攻坚战役，稳扎稳打夯实护城河，大器晚成终有宏图回报。<br>✦ <strong>避坑提点</strong>：适当放松紧绷的心弦，工作之余留一隙闲暇，劳逸结合乃长久之道。<br>✦ <strong>穿搭开运</strong>：选用深色皮具或厚重黑晶石，稳如泰山，坚守正道，声名日隆。'
+      },
+      aquarius: {
+        icon: '♒', name: '水瓶座', en: 'Aquarius', title: '星海泛槎 · 独步青霄',
+        score: 97, level: '灵启 · 跨维突破',
+        mOverall: 97, mWealth: 95, mCareer: 94, mLove: 92,
+        desc: '天王星共振本命，前沿直觉跨越时代。破立之间独辟蹊径，无人涉足的荒原即是你的无垠蓝海。',
+        match: '♊ 双子 98%', stone: '极光紫水晶', color: '极光幻紫', number: '11 / 22',
+        transit: '天王星六合水星 · 灵光无量', luckyTime: '21:00 - 23:00',
+        guideTag: '开创独步',
+        guideBody: '✦ <strong>灵修指引</strong>：大胆跳出常规思维框架，推敲全新方案，不落俗套的构想必将惊艳众人。<br>✦ <strong>避坑提点</strong>：阐述新颖概念时兼顾伙伴的理解步调，多用生活化比喻拉近距离。<br>✦ <strong>穿搭开运</strong>：佩戴具有未来科技感或不对称线条的银饰，激荡磁场中的灵感电荷。'
+      },
+      pisces: {
+        icon: '♓', name: '双鱼座', en: 'Pisces', title: '碧落星河 · 幻化清明',
+        score: 95, level: '灵妙 · 万象共生',
+        mOverall: 95, mWealth: 90, mCareer: 91, mLove: 99,
+        desc: '海王星散布慈和清晖，灵感与艺术触觉如春水涌动。善念如环，福泽绵长，精神共振达到峰值。',
+        match: '♋ 巨蟹 99%', stone: '天然海蓝宝', color: '幻彩星海蓝', number: '7 / 12',
+        transit: '海王星三合月亮 · 灵感天成', luckyTime: '17:00 - 19:00',
+        guideTag: '澄澈空灵',
+        guideBody: '✦ <strong>灵修指引</strong>：倾听一段轻柔的治愈音乐或白噪音，在放空中让心愿的种子悄然生根发芽。<br>✦ <strong>避坑提点</strong>：面对实际业务多以客观数据为准绳，脚踏实地，方能将心中蓝图落于现实。<br>✦ <strong>穿搭开运</strong>：随身佩戴海蓝宝或水润冰种水晶，身心润泽，神清气爽，百邪不侵。'
+      }
+    };
+
+    // ==========================================
+    // COMPLETE 12 CHINESE ZODIAC HOROSCOPE DATA ENGINE
+    // ==========================================
+    const CHINESE_ZODIAC_DATA = {
+      rat: {
+        icon: '🐭', name: '属鼠 · 子水', title: '灵鼠衔珠 · 潜水养光',
+        score: 88, level: '平吉 · 沉潜蓄势',
+        mCareer: 85, mWealth: 82, mNoble: 89, mHealth: 90,
+        desc: '今日逢丙午日，子午相冲。虽见冲煞震荡，亦是破旧立新之契机。行事宜深水潜行，收敛锋芒，稳扎稳打。',
+        he: '🐮 生肖牛', sanhe: '🐵 猴 / 🐲 龙', pos: '正北 / 东北', item: '金曜石挂坠',
+        clash: '今日与【生肖马】相冲，重大交易慎防变卦', color: '墨黑、天水蓝 · 忌浓烈艳红',
+        tips: '处事锦囊：遇事三思，以静制动。签订协议时逐字核验，晚间宜早归静心养神。'
+      },
+      ox: {
+        icon: '🐮', name: '属牛 · 丑土', title: '瑞牛耕金 · 贵人垂青',
+        score: 96, level: '大吉 · 金匮照命',
+        mCareer: 97, mWealth: 94, mNoble: 98, mHealth: 93,
+        desc: '丑土生金，得午火温煦相照。今日金匮福星入命，长辈与上峰多有照拂，职场进益与财运收获双丰收。',
+        he: '🐭 生肖鼠', sanhe: '🐍 蛇 / 🐔 鸡', pos: '东北 / 正南', item: '天然黄水晶',
+        clash: '与【生肖羊】相冲相刑，言语避免直白生硬', color: '姜黄、暖卡其、浅杏色',
+        tips: '处事锦囊：适合向主管汇报战略、洽谈中长期合作，言辞诚恳必有重大斩获。'
+      },
+      tiger: {
+        icon: '🐯', name: '属虎 · 寅木', title: '啸傲烟霞 · 驿马生威',
+        score: 94, level: '上吉 · 三合火局',
+        mCareer: 96, mWealth: 91, mNoble: 93, mHealth: 92,
+        desc: '寅午半合火局，驿马星动。今日气势如虹，适合开疆拓土，远行出差或拜访核心大客皆大有裨益。',
+        he: '🐷 生肖猪', sanhe: '🐴 马 / 🐶 狗', pos: '正东 / 西北', item: '绿幽灵水晶',
+        clash: '与【生肖猴】相冲，行车出行宜从容，勿争道抢行', color: '青翠绿、松柏深绿',
+        tips: '处事锦囊：主动出击联络重要伙伴，把握稍纵即逝的商业机遇，势如破竹。'
+      },
+      rabbit: {
+        icon: '🐰', name: '属兔 · 卯木', title: '丹桂步月 · 润物无声',
+        score: 89, level: '顺遂 · 文昌入怀',
+        mCareer: 88, mWealth: 86, mNoble: 91, mHealth: 94,
+        desc: '卯木生丙火，才思横溢。今日宜从事文案企划、灵感创作与审美设计，易获众人交口赞誉。',
+        he: '🐶 生肖狗', sanhe: '🐷 猪 / 🐑 羊', pos: '正东 / 正南', item: '月光石手串',
+        clash: '与【生肖鸡】相冲，避免因琐碎言辞产生不必要误解', color: '浅粉、淡青、薄荷绿',
+        tips: '处事锦囊：专注打磨手头核心作品，多与性情温和之友交流，远离名利是非圈。'
+      },
+      dragon: {
+        icon: '🐲', name: '属龙 · 辰土', title: '潜龙凌云 · 祥瑞捧日',
+        score: 97, level: '极吉 · 文魁高照',
+        mCareer: 98, mWealth: 95, mNoble: 96, mHealth: 95,
+        desc: '辰土培厚土生金，午阳温润照命。今日灵感如泉涌，重大决策一针见血，贵人四方云集。',
+        he: '🐔 生肖鸡', sanhe: '🐵 猴 / 🐭 鼠', pos: '东南 / 正西', item: '青金石印章',
+        clash: '与【生肖狗】相冲，胸怀宽广勿对旧事耿耿于怀', color: '香槟金、暖琥珀色',
+        tips: '处事锦囊：统筹全局谋定而后动，今日是敲定关键方向、签约启动的良辰吉日。'
+      },
+      snake: {
+        icon: '🐍', name: '属蛇 · 巳火', title: '灵蛇化龙 · 烈火淬真',
+        score: 93, level: '亨通 · 比肩助势',
+        mCareer: 92, mWealth: 93, mNoble: 91, mHealth: 95,
+        desc: '巳火与午火比肩相生，团队协作如虎添翼。善借同侪之力，同声相应，同气相求，进退自如。',
+        he: '🐵 生肖猴', sanhe: '🐮 牛 / 🐔 鸡', pos: '东南 / 东北', item: '天然南红玛瑙',
+        clash: '与【生肖猪】相冲，水火激荡时宜守清静平和之心', color: '朱砂红、紫罗兰色',
+        tips: '处事锦囊：召开协同推进会凝聚共识，团队合力将轻松攻克既往积存疑难。'
+      },
+      horse: {
+        icon: '🐴', name: '属马 · 午火', title: '骅骝踏星 · 烈日正中',
+        score: 90, level: '吉顺 · 阳明当令',
+        mCareer: 91, mWealth: 89, mNoble: 92, mHealth: 88,
+        desc: '今日逢丙午日，生肖属马值日当令，火气旺盛。虽有自刑之虞，但阳气充沛，凡事沉着即成。',
+        he: '🐑 生肖羊', sanhe: '🐯 虎 / 🐶 狗', pos: '正南 / 西南', item: '白水晶透亮吊坠',
+        clash: '与【生肖鼠】相冲，注意调节心境，勿受外界喧嚣扰动', color: '羊脂白、浅明黄',
+        tips: '处事锦囊：晨起饮温水润燥，遇事退一步海阔天空，心平气和则百福自至。'
+      },
+      goat: {
+        icon: '🐑', name: '属羊 · 未土', title: '玉羊呈瑞 · 六合天德',
+        score: 98, level: '绝佳 · 六合贵局',
+        mCareer: 97, mWealth: 96, mNoble: 99, mHealth: 96,
+        desc: '午未六合，天德吉星高照。今日人缘与运势俱达极盛，求谋顺遂，遇难呈祥，大吉大利。',
+        he: '🐴 生肖马', sanhe: '🐷 猪 / 🐰 兔', pos: '西南 / 正南', item: '乌拉圭深紫水晶',
+        clash: '与【生肖牛】相冲，涉及资金借贷往来宜保留清晰凭据', color: '薰衣草紫、米杏色',
+        tips: '处事锦囊：今日尽可自信进取，多向贵人长辈请益，喜讯自会主动登门。'
+      },
+      monkey: {
+        icon: '🐵', name: '属猴 · 申金', title: '灵猿攀月 · 智周万物',
+        score: 91, level: '顺昌 · 巧思通达',
+        mCareer: 90, mWealth: 93, mNoble: 90, mHealth: 92,
+        desc: '申金遇午火锻炼，烈火炼真金。变局之中蕴含前所未有的突破口，机变敏捷，化险为夷。',
+        he: '🐍 生肖蛇', sanhe: '🐭 鼠 / 🐲 龙', pos: '西南 / 正北', item: '天然钛晶戒面',
+        clash: '与【生肖虎】相冲，外出奔波劳顿注意保持作息节奏', color: '亮银白、曜石黑',
+        tips: '处事锦囊：面对难题不走寻常路，发挥机敏灵动优势，打破既定僵局立见奇效。'
+      },
+      rooster: {
+        icon: '🐔', name: '属鸡 · 酉金', title: '金凤啼晓 · 天喜红鸾',
+        score: 95, level: '亨泰 · 桃花生财',
+        mCareer: 94, mWealth: 96, mNoble: 97, mHealth: 93,
+        desc: '酉月丁火炼金，天喜吉星入度。人际魅力拉满，谈吐优雅讨喜，财运如潮水汇聚。',
+        he: '🐲 生肖龙', sanhe: '🐮 牛 / 🐍 蛇', pos: '正西 / 东北', item: '天然草莓晶',
+        clash: '与【生肖兔】相冲，重要文档与书面往来注意保密', color: '樱花粉、流金白',
+        tips: '处事锦囊：适宜商务洽谈、品牌展示与情感交流，真诚以待便能结下深厚善缘。'
+      },
+      dog: {
+        icon: '🐶', name: '属狗 · 戌土', title: '灵獒定鼎 · 三合聚宝',
+        score: 97, level: '恒吉 · 三台护禄',
+        mCareer: 97, mWealth: 95, mNoble: 98, mHealth: 95,
+        desc: '午戌半合火局，三台华盖并临。今日做事稳如磐石，执行力爆棚，项目推进与落地极顺。',
+        he: '🐰 生肖兔', sanhe: '🐯 虎 / 🐴 马', pos: '西北 / 正东', item: '金虎眼石手串',
+        clash: '与【生肖龙】相冲，保持谦和低调，多包容不同视角的建议', color: '大地棕、暖茶色',
+        tips: '处事锦囊：集中攻克关键骨头任务，脚踏实地的扎实验收将赢得众人由衷赞赏。'
+      },
+      pig: {
+        icon: '🐷', name: '属猪 · 亥水', title: '福猪拱斗 · 水火既济',
+        score: 92, level: '祥瑞 · 暗禄生辉',
+        mCareer: 91, mWealth: 94, mNoble: 94, mHealth: 96,
+        desc: '亥水与午火阴阳相济，暗禄星悄然照拂。财气暗生，生活有惊喜小确幸降临，惬意从容。',
+        he: '🐯 生肖虎', sanhe: '🐰 兔 / 🐑 羊', pos: '西北 / 正东', item: '天然海蓝宝',
+        clash: '与【生肖蛇】相冲，行事留有余地，与人交谈勿把话说得太满', color: '冰川蓝、珠光白',
+        tips: '处事锦囊：保持悠然平和心态，善待身边的每一个人，福气自然如影随形。'
+      }
+    };
+
+    let activeZodiacKey = 'scorpio';
+    let activeChineseZodiacKey = 'dragon';
+
+    function renderZodiac(signKey) {
+      activeZodiacKey = signKey;
+      const d = ZODIAC_DATA[signKey];
+      if (!d) return;
+
+      const card = document.getElementById('zodiac-main-card');
+      if (card) {
+        card.style.opacity = '0.7';
+        card.style.transform = 'translateY(2px)';
+      }
+
+      setTimeout(() => {
+        const elTitle = document.getElementById('zodiac-title');
+        if (elTitle) elTitle.innerText = `✦ ${d.name} ${d.en} · ${d.title}`;
+
+        const elBadge = document.getElementById('zodiac-score-badge');
+        if (elBadge) elBadge.innerText = `${d.score}分 ${d.level.split('·')[0].trim()}`;
+
+        const setMetric = (labelId, barId, val) => {
+          const l = document.getElementById(labelId);
+          const b = document.getElementById(barId);
+          if (l) l.innerText = `${val}%`;
+          if (b) b.style.width = `${val}%`;
+        };
+
+        setMetric('zodiac-m-overall', 'zodiac-bar-overall', d.mOverall);
+        setMetric('zodiac-m-wealth', 'zodiac-bar-wealth', d.mWealth);
+        setMetric('zodiac-m-career', 'zodiac-bar-career', d.mCareer);
+        setMetric('zodiac-m-love', 'zodiac-bar-love', d.mLove);
+
+        const elDesc = document.getElementById('zodiac-desc');
+        if (elDesc) elDesc.innerText = d.desc;
+
+        const elMatch = document.getElementById('zodiac-match');
+        if (elMatch) elMatch.innerText = d.match;
+
+        const elStone = document.getElementById('zodiac-stone');
+        if (elStone) elStone.innerText = d.stone;
+
+        const elColor = document.getElementById('zodiac-color');
+        if (elColor) elColor.innerText = d.color;
+
+        const elNum = document.getElementById('zodiac-num');
+        if (elNum) elNum.innerText = d.number;
+
+        const elTransit = document.getElementById('zodiac-transit');
+        if (elTransit) elTransit.innerHTML = `✦ <strong>天象合轴</strong>：${d.transit}`;
+
+        const elTime = document.getElementById('zodiac-lucky-time');
+        if (elTime) elTime.innerHTML = `✦ <strong>灵感吉时</strong>：${d.luckyTime}`;
+
+        const elGuideTag = document.getElementById('zodiac-guide-tag');
+        if (elGuideTag) elGuideTag.innerText = d.guideTag;
+
+        const elGuideBody = document.getElementById('zodiac-guide-body');
+        if (elGuideBody) elGuideBody.innerHTML = d.guideBody;
+
+        if (card) {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }
+      }, 80);
+    }
+
+    function renderChineseZodiac(signKey) {
+      activeChineseZodiacKey = signKey;
+      const d = CHINESE_ZODIAC_DATA[signKey];
+      if (!d) return;
+
+      const card = document.getElementById('czodiac-main-card');
+      if (card) {
+        card.style.opacity = '0.7';
+        card.style.transform = 'translateY(2px)';
+      }
+
+      setTimeout(() => {
+        const elTitle = document.getElementById('czodiac-title');
+        if (elTitle) elTitle.innerText = `✦ ${d.name} · ${d.title}`;
+
+        const elBadge = document.getElementById('czodiac-score-badge');
+        if (elBadge) elBadge.innerText = `${d.score}分 ${d.level.split('·')[0].trim()}`;
+
+        const setMetric = (labelId, barId, val) => {
+          const l = document.getElementById(labelId);
+          const b = document.getElementById(barId);
+          if (l) l.innerText = `${val}%`;
+          if (b) b.style.width = `${val}%`;
+        };
+
+        setMetric('czodiac-m-career', 'czodiac-bar-career', d.mCareer);
+        setMetric('czodiac-m-wealth', 'czodiac-bar-wealth', d.mWealth);
+        setMetric('czodiac-m-noble', 'czodiac-bar-noble', d.mNoble);
+        setMetric('czodiac-m-health', 'czodiac-bar-health', d.mHealth);
+
+        const elDesc = document.getElementById('czodiac-desc');
+        if (elDesc) elDesc.innerText = d.desc;
+
+        const elHe = document.getElementById('czodiac-he');
+        if (elHe) elHe.innerText = d.he;
+
+        const elSanhe = document.getElementById('czodiac-sanhe');
+        if (elSanhe) elSanhe.innerText = d.sanhe;
+
+        const elPos = document.getElementById('czodiac-pos');
+        if (elPos) elPos.innerText = d.pos;
+
+        const elItem = document.getElementById('czodiac-item');
+        if (elItem) elItem.innerText = d.item;
+
+        const elClash = document.getElementById('czodiac-clash');
+        if (elClash) elClash.innerHTML = `✦ <strong>冲忌提醒</strong>：${d.clash}`;
+
+        const elColor = document.getElementById('czodiac-lucky-color');
+        if (elColor) elColor.innerHTML = `✦ <strong>吉祥色</strong>：${d.color}`;
+
+        const elTips = document.getElementById('czodiac-tips');
+        if (elTips) elTips.innerHTML = `✦ <strong>${d.tips}`;
+
+        if (card) {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }
+      }, 80);
+    }
+
+    // Wire up Zodiac Pills
     const zodiacPills = document.querySelectorAll('.zodiac-pill-item');
     zodiacPills.forEach(pill => {
       pill.addEventListener('click', () => {
         zodiacPills.forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
+        const sign = pill.getAttribute('data-sign');
+        renderZodiac(sign);
         playBambooStick();
+        triggerHaptic(40);
       });
     });
 
+    // Wire up Chinese Zodiac Pills
+    const czodiacPills = document.querySelectorAll('.czodiac-pill-item');
+    czodiacPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        czodiacPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        const sign = pill.getAttribute('data-sign');
+        renderChineseZodiac(sign);
+        playBambooStick();
+        triggerHaptic(40);
+      });
+    });
+
+    // Initial render of default signs
+    renderZodiac('scorpio');
+    renderChineseZodiac('dragon');
+
     // ==========================================
-    // 4. MODULE 1: SHAKE DIVINATION LOGIC & NATIVE SENSOR
+    // 5. MODULE 1: SHAKE DIVINATION LOGIC & NATIVE SENSOR
     // ==========================================
     const tubeArea = document.getElementById('tube-click-area');
     const triggerShakeBtn = document.getElementById('btn-trigger-shake');
@@ -1517,23 +2109,23 @@
         tubeArea.classList.remove('shaking');
         playTibetanBowl(432);
         resultCard.style.display = 'block';
-        scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
+        if (scrollContainer) {
+          scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
+        }
         isShaking = false;
       }, 700);
     }
 
-    tubeArea.addEventListener('click', executeShake);
-    triggerShakeBtn.addEventListener('click', executeShake);
+    if (tubeArea) tubeArea.addEventListener('click', executeShake);
+    if (triggerShakeBtn) triggerShakeBtn.addEventListener('click', executeShake);
 
-    // Native Accelerometer bridge callback
     window.handleNativeShake = function() {
       executeShake();
     };
 
-    // Native Back Button
     window.handleAndroidBack = function() {
       const posterModal = document.getElementById('poster-modal-preview');
-      if (posterModal.classList.contains('active')) {
+      if (posterModal && posterModal.classList.contains('active')) {
         posterModal.classList.remove('active');
         return true;
       }
@@ -1541,65 +2133,46 @@
     };
 
     // ==========================================
-    // 5. MODULE 3: TAROT PICK & RESET LOGIC
+    // 6. MODULE 3: TAROT LOGIC
     // ==========================================
-    const tarotCards = document.querySelectorAll('.tarot-card-item');
     const drawTarotBtn = document.getElementById('btn-draw-tarot');
-    const tarotArc = document.getElementById('tarot-arc-stage');
-    const revealedBox = document.getElementById('revealed-tarot-box');
-    const tarotFlipper = document.getElementById('tarot-flipper-target');
-    const tarotMeaning = document.getElementById('tarot-meaning-card');
-    const tarotLoreBox = document.getElementById('tarot-lore-box');
-    let tarotDrawn = false;
+    const tarotArcStage = document.getElementById('tarot-arc-stage');
+    const tarotResultView = document.getElementById('tarot-result-view');
+    const tarot3DCard = document.getElementById('tarot-3d-card-inner');
 
-    function revealTarot() {
-      if (!tarotDrawn) {
-        tarotDrawn = true;
-        playCrystalChime();
-        tarotArc.style.display = 'none';
-        if (tarotLoreBox) tarotLoreBox.style.display = 'none';
-        revealedBox.style.display = 'block';
-        setTimeout(() => {
-          tarotFlipper.classList.add('flipped');
-          playTibetanBowl(528);
-          tarotMeaning.style.display = 'block';
-          drawTarotBtn.innerText = '↺ 重新洗牌 · 再次抽取';
+    function executeTarotFlip() {
+      drawTarotBtn.disabled = true;
+      playBambooStick();
+      triggerHaptic(50);
+
+      tarotArcStage.style.opacity = '0.3';
+      tarotResultView.style.display = 'block';
+
+      setTimeout(() => {
+        tarot3DCard.classList.add('flipped');
+        playTibetanBowl(528);
+        triggerHaptic(80);
+        drawTarotBtn.disabled = false;
+        if (scrollContainer) {
           scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
-        }, 200);
-      } else {
-        tarotDrawn = false;
-        tarotFlipper.classList.remove('flipped');
-        revealedBox.style.display = 'none';
-        tarotMeaning.style.display = 'none';
-        if (tarotLoreBox) tarotLoreBox.style.display = 'block';
-        tarotArc.style.display = 'flex';
-        drawTarotBtn.innerText = '🎴 3D 棱镜切牌 · 直觉抽取';
-        playBambooStick();
-      }
+        }
+      }, 300);
     }
 
-    tarotCards.forEach(c => c.addEventListener('click', revealTarot));
-    drawTarotBtn.addEventListener('click', revealTarot);
+    if (drawTarotBtn) drawTarotBtn.addEventListener('click', executeTarotFlip);
 
     // ==========================================
-    // 6. MODULE 4: SEND WISH LANTERN & WISH PILLS
+    // 7. MODULE 4: LANTERN WISHES
     // ==========================================
     const sendWishBtn = document.getElementById('btn-send-wish');
     const submitWishBtn = document.getElementById('btn-submit-wish');
     const inputWishText = document.getElementById('input-wish-text');
     const lanternSky = document.getElementById('lantern-sky-canvas');
 
-    const wishThemePills = document.querySelectorAll('.wish-theme-pill');
-    wishThemePills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        wishThemePills.forEach(wp => wp.classList.remove('active'));
-        pill.classList.add('active');
-        playBambooStick();
-      });
-    });
-
     function createLanternWish(customText) {
-      playTibetanBowl(432);
+      playTibetanBowl(639);
+      triggerHaptic(60);
+
       const newLantern = document.createElement('div');
       newLantern.className = 'celestial-lantern';
       newLantern.style.left = `${15 + Math.random() * 70}%`;
@@ -1619,111 +2192,209 @@
       setTimeout(() => newLantern.remove(), 8000);
     }
 
-    sendWishBtn.addEventListener('click', () => createLanternWish());
-    submitWishBtn.addEventListener('click', () => {
+    if (sendWishBtn) sendWishBtn.addEventListener('click', () => createLanternWish());
+    if (submitWishBtn) submitWishBtn.addEventListener('click', () => {
       const text = inputWishText.value.trim();
       createLanternWish(text || '愿所求皆如愿，所行皆坦途');
       inputWishText.value = '';
     });
 
     // ==========================================
-    // 7. POSTER GENERATION (750x1334) & NATIVE SAVE/SHARE
+    // 8. DYNAMIC HIGH-RES POSTER GENERATION (750x1334)
     // ==========================================
     const exportPosterBtn = document.getElementById('btn-export-poster');
     const posterModal = document.getElementById('poster-modal-preview');
     const closePosterBtn = document.getElementById('btn-close-poster');
     const posterCanvas = document.getElementById('poster-render-canvas');
 
-    exportPosterBtn.addEventListener('click', () => {
-      playTibetanBowl(432);
-      posterModal.classList.add('active');
+    if (exportPosterBtn) {
+      exportPosterBtn.addEventListener('click', () => {
+        playTibetanBowl(432);
+        posterModal.classList.add('active');
 
-      const ctx = posterCanvas.getContext('2d');
-      ctx.fillStyle = '#06080e';
-      ctx.fillRect(0, 0, 750, 1334);
+        const ctx = posterCanvas.getContext('2d');
+        const cal = getLiveCalendarInfo();
 
-      ctx.strokeStyle = '#c5a059';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(30, 30, 690, 1274);
-      ctx.strokeRect(42, 42, 666, 1250);
+        const grad = ctx.createLinearGradient(0, 0, 0, 1334);
+        grad.addColorStop(0, '#060812');
+        grad.addColorStop(0.5, '#0c1020');
+        grad.addColorStop(1, '#060810');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 750, 1334);
 
-      ctx.fillStyle = '#fae6b8';
-      ctx.font = 'bold 36px serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('✦ 丙午吉曜 · 每日指引 ✦', 375, 140);
+        ctx.strokeStyle = '#c5a059';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(30, 30, 690, 1274);
+        ctx.strokeStyle = 'rgba(197, 160, 89, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(40, 40, 670, 1254);
 
-      ctx.fillStyle = '#9da5b6';
-      ctx.font = '22px sans-serif';
-      ctx.fillText('2026年9月29日 · 农历八月十九 · 寒露', 375, 185);
+        ctx.fillStyle = '#fae6b8';
+        ctx.font = 'bold 36px "Songti SC", serif';
+        ctx.textAlign = 'center';
 
-      ctx.fillStyle = '#d8b46b';
-      ctx.font = 'bold 44px serif';
-      ctx.fillText('第十八签 · 飞龙在天', 375, 340);
+        if (currentModule === 'fortune' && tabZodiac.classList.contains('active')) {
+          const zd = ZODIAC_DATA[activeZodiacKey];
+          ctx.fillText(`✦ 星轨吉曜 · ${zd.name}专属运势 ✦`, 375, 140);
 
-      ctx.fillStyle = '#b93826';
-      ctx.fillRect(315, 380, 120, 42);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.fillText('上上大吉', 375, 410);
+          ctx.fillStyle = '#9da5b6';
+          ctx.font = '22px sans-serif';
+          ctx.fillText(`${cal.year}年${cal.month}月${cal.day}日 · 农历${cal.lunarStr} · ${cal.dayGanZhi}日`, 375, 185);
 
-      ctx.fillStyle = '#edeef2';
-      ctx.font = '28px serif';
-      ctx.fillText('彩凤呈祥瑞气临，玉堂金马日争新。', 375, 520);
-      ctx.fillText('若逢春意盎然处，万里清风上九城。', 375, 570);
+          ctx.fillStyle = '#d8b46b';
+          ctx.font = 'bold 44px "Songti SC", serif';
+          ctx.fillText(`${zd.icon} ${zd.name} · ${zd.score}分`, 375, 300);
 
-      ctx.fillStyle = '#fae6b8';
-      ctx.font = '22px sans-serif';
-      ctx.fillText('✦ 宜 顺遂本心   ✦ 宜 登高见贵   ✦ 忌 犹疑畏缩', 375, 680);
+          ctx.fillStyle = '#b93826';
+          ctx.fillRect(295, 330, 160, 42);
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 22px sans-serif';
+          ctx.fillText(zd.level, 375, 360);
 
-      ctx.strokeStyle = '#b93826';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(325, 800, 100, 100);
-      ctx.fillStyle = '#b93826';
-      ctx.font = 'bold 32px serif';
-      ctx.fillText('吉曜', 375, 845);
-      ctx.fillText('长生', 375, 885);
+          ctx.fillStyle = '#edeef2';
+          ctx.font = '24px "Songti SC", serif';
+          ctx.fillText(`“${zd.desc.slice(0, 24)}”`, 375, 460);
+          if (zd.desc.length > 24) {
+            ctx.fillText(`“${zd.desc.slice(24, 48)}”`, 375, 500);
+          }
 
-      ctx.fillStyle = '#8b92a3';
-      ctx.font = '20px sans-serif';
-      ctx.fillText('《星运灵签》典藏版 · 纯本地高刷沉浸体验', 375, 1220);
-    });
+          ctx.fillStyle = '#fae6b8';
+          ctx.font = '22px sans-serif';
+          ctx.fillText(`✦ 综合指数 ${zd.mOverall}%   ✦ 灵感财帛 ${zd.mWealth}%`, 375, 600);
+          ctx.fillText(`✦ 事业天命 ${zd.mCareer}%   ✦ 情感共鸣 ${zd.mLove}%`, 375, 650);
 
-    closePosterBtn.addEventListener('click', () => {
-      posterModal.classList.remove('active');
-    });
+          ctx.fillStyle = '#fae6b8';
+          ctx.font = '21px sans-serif';
+          ctx.fillText(`✦ 契合星座：${zd.match}   ✦ 能量宝石：${zd.stone}`, 375, 740);
+          ctx.fillText(`✦ 幸运色彩：${zd.color}   ✦ 幸运数字：${zd.number}`, 375, 790);
 
-    // Native Bridge Save & Share
-    document.getElementById('btn-save-poster-img').addEventListener('click', () => {
-      const base64Data = posterCanvas.toDataURL('image/png');
-      if (window.AndroidBridge && typeof window.AndroidBridge.saveImageToGallery === 'function') {
-        window.AndroidBridge.saveImageToGallery(base64Data);
-      } else {
-        const link = document.createElement('a');
-        link.download = 'Xingyun_Fortune_Card.png';
-        link.href = base64Data;
-        link.click();
-      }
-      playCrystalChime();
-    });
+          ctx.fillStyle = '#c5a059';
+          ctx.font = '20px sans-serif';
+          ctx.fillText(`✦ 天象合轴：${zd.transit} · 灵感吉时 ${zd.luckyTime}`, 375, 870);
 
-    document.getElementById('btn-share-poster-img').addEventListener('click', () => {
-      const base64Data = posterCanvas.toDataURL('image/png');
-      if (window.AndroidBridge && typeof window.AndroidBridge.shareImage === 'function') {
-        window.AndroidBridge.shareImage(base64Data);
-      } else if (navigator.share) {
-        posterCanvas.toBlob(blob => {
-          const file = new File([blob], 'fortune.png', { type: 'image/png' });
-          navigator.share({
-            title: '星运灵签',
-            text: '今日专属运势签卡',
-            files: [file]
-          }).catch(() => {});
-        });
-      } else {
-        alert('请在安卓设备上使用原生分享面板');
-      }
-      playCrystalChime();
-    });
+        } else if (currentModule === 'fortune' && tabAlmanac.classList.contains('active')) {
+          const cd = CHINESE_ZODIAC_DATA[activeChineseZodiacKey];
+          ctx.fillText(`✦ 岁时干支 · ${cd.name}专属流年卡 ✦`, 375, 140);
+
+          ctx.fillStyle = '#9da5b6';
+          ctx.font = '22px sans-serif';
+          ctx.fillText(`${cal.year}年${cal.month}月${cal.day}日 · 农历${cal.lunarStr} · ${cal.dayGanZhi}日`, 375, 185);
+
+          ctx.fillStyle = '#d8b46b';
+          ctx.font = 'bold 44px "Songti SC", serif';
+          ctx.fillText(`${cd.icon} ${cd.name} · ${cd.score}分`, 375, 300);
+
+          ctx.fillStyle = '#b93826';
+          ctx.fillRect(295, 330, 160, 42);
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 22px sans-serif';
+          ctx.fillText(cd.level, 375, 360);
+
+          ctx.fillStyle = '#edeef2';
+          ctx.font = '24px "Songti SC", serif';
+          ctx.fillText(`“${cd.desc.slice(0, 24)}”`, 375, 460);
+          if (cd.desc.length > 24) {
+            ctx.fillText(`“${cd.desc.slice(24, 48)}”`, 375, 500);
+          }
+
+          ctx.fillStyle = '#fae6b8';
+          ctx.font = '22px sans-serif';
+          ctx.fillText(`✦ 事业晋升 ${cd.mCareer}%   ✦ 正偏财运 ${cd.mWealth}%`, 375, 600);
+          ctx.fillText(`✦ 贵人扶持 ${cd.mNoble}%   ✦ 身心安泰 ${cd.mHealth}%`, 375, 650);
+
+          ctx.fillStyle = '#fae6b8';
+          ctx.font = '21px sans-serif';
+          ctx.fillText(`✦ 六合贵人：${cd.he}   ✦ 三合贵人：${cd.sanhe}`, 375, 740);
+          ctx.fillText(`✦ 开运吉位：${cd.pos}   ✦ 开运法宝：${cd.item}`, 375, 790);
+
+          ctx.fillStyle = '#c5a059';
+          ctx.font = '20px sans-serif';
+          ctx.fillText(`✦ 宜 出行·纳财·会友·祈福   ✦ 忌 词讼·动土·破土`, 375, 870);
+
+        } else {
+          ctx.fillText('✦ 丙午吉曜 · 每日指引 ✦', 375, 140);
+
+          ctx.fillStyle = '#9da5b6';
+          ctx.font = '22px sans-serif';
+          ctx.fillText(`${cal.year}年${cal.month}月${cal.day}日 · 农历${cal.lunarStr} · ${cal.dayGanZhi}日`, 375, 185);
+
+          ctx.fillStyle = '#d8b46b';
+          ctx.font = 'bold 44px serif';
+          ctx.fillText('第十八签 · 飞龙在天', 375, 340);
+
+          ctx.fillStyle = '#b93826';
+          ctx.fillRect(315, 380, 120, 42);
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 22px sans-serif';
+          ctx.fillText('上上大吉', 375, 410);
+
+          ctx.fillStyle = '#edeef2';
+          ctx.font = '28px serif';
+          ctx.fillText('彩凤呈祥瑞气临，玉堂金马日争新。', 375, 520);
+          ctx.fillText('若逢春意盎然处，万里清风上九城。', 375, 570);
+
+          ctx.fillStyle = '#fae6b8';
+          ctx.font = '22px sans-serif';
+          ctx.fillText('✦ 宜 顺遂本心   ✦ 宜 登高见贵   ✦ 忌 犹疑畏缩', 375, 680);
+        }
+
+        ctx.strokeStyle = '#b93826';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(325, 960, 100, 100);
+        ctx.fillStyle = '#b93826';
+        ctx.font = 'bold 30px "Songti SC", serif';
+        ctx.fillText('吉曜', 375, 1005);
+        ctx.fillText('长生', 375, 1045);
+
+        ctx.fillStyle = '#8b92a3';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('《星运灵签》典藏版 · 纯本地高刷沉浸体验', 375, 1220);
+      });
+    }
+
+    if (closePosterBtn) {
+      closePosterBtn.addEventListener('click', () => {
+        posterModal.classList.remove('active');
+      });
+    }
+
+    const savePosterBtn = document.getElementById('btn-save-poster-img');
+    if (savePosterBtn) {
+      savePosterBtn.addEventListener('click', () => {
+        const base64Data = posterCanvas.toDataURL('image/png');
+        if (window.AndroidBridge && typeof window.AndroidBridge.saveImageToGallery === 'function') {
+          window.AndroidBridge.saveImageToGallery(base64Data);
+        } else {
+          const link = document.createElement('a');
+          link.download = 'Xingyun_Fortune_Card.png';
+          link.href = base64Data;
+          link.click();
+        }
+        playCrystalChime();
+      });
+    }
+
+    const sharePosterBtn = document.getElementById('btn-share-poster-img');
+    if (sharePosterBtn) {
+      sharePosterBtn.addEventListener('click', () => {
+        const base64Data = posterCanvas.toDataURL('image/png');
+        if (window.AndroidBridge && typeof window.AndroidBridge.shareImage === 'function') {
+          window.AndroidBridge.shareImage(base64Data);
+        } else if (navigator.share) {
+          posterCanvas.toBlob(blob => {
+            const file = new File([blob], 'fortune.png', { type: 'image/png' });
+            navigator.share({
+              title: '星运灵签',
+              text: '今日专属运势签卡',
+              files: [file]
+            }).catch(() => {});
+          });
+        } else {
+          alert('请在安卓设备上使用原生分享面板');
+        }
+        playCrystalChime();
+      });
+    }
   </script>
 </body>
 </html>
