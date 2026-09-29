@@ -2,6 +2,7 @@ package com.lingyun.fortune
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
@@ -15,6 +16,9 @@ import android.provider.MediaStore
 import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.widget.Toast
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
 import java.io.OutputStream
 
 class WebAppInterface(private val context: Context) {
@@ -48,12 +52,12 @@ class WebAppInterface(private val context: Context) {
                 val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
 
                 if (bitmap != null) {
-                    val fileName = "Lingyun_Fortune_${System.currentTimeMillis()}.png"
+                    val fileName = "Xingyun_Fortune_${System.currentTimeMillis()}.png"
                     val contentValues = ContentValues().apply {
                         put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
                         put(MediaStore.Images.Media.MIME_TYPE, "image/png")
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/LingyunFortune")
+                            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/XingyunFortune")
                             put(MediaStore.Images.Media.IS_PENDING, 1)
                         }
                     }
@@ -72,7 +76,7 @@ class WebAppInterface(private val context: Context) {
                             resolver.update(uri, contentValues, null, null)
                         }
 
-                        postToast("✦ 运势签卡已保存至系统相册 ✦", Toast.LENGTH_LONG)
+                        postToast("✦ 专属运势签卡已保存至系统相册 ✦", Toast.LENGTH_LONG)
                         vibrate(40)
                     } else {
                         postToast("保存失败：无法创建图片文件")
@@ -83,6 +87,56 @@ class WebAppInterface(private val context: Context) {
             } catch (e: Exception) {
                 e.printStackTrace()
                 postToast("保存异常: ${e.localizedMessage}")
+            }
+        }.start()
+    }
+
+    /**
+     * Share fortune card via Android Native Intent.ACTION_SEND
+     */
+    @JavascriptInterface
+    fun shareImage(base64Data: String) {
+        Thread {
+            try {
+                val cleanBase64 = if (base64Data.contains(",")) {
+                    base64Data.substringAfter(",")
+                } else {
+                    base64Data
+                }
+
+                val decodedBytes = Base64.decode(cleanBase64, Base64.DEFAULT)
+                val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+
+                if (bitmap != null) {
+                    val cacheFolder = File(context.cacheDir, "images")
+                    if (!cacheFolder.exists()) {
+                        cacheFolder.mkdirs()
+                    }
+                    val file = File(cacheFolder, "xingyun_fortune_share.png")
+                    val out = FileOutputStream(file)
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                    out.flush()
+                    out.close()
+
+                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "image/png"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        putExtra(Intent.EXTRA_TEXT, "✦ 星运灵签 · 乾坤吉曜 ✦ 今日专属运势指引")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+
+                    val chooser = Intent.createChooser(shareIntent, "分享我的今日运势签卡").apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(chooser)
+                } else {
+                    postToast("分享失败：图片解析异常")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                postToast("分享失败: ${e.localizedMessage}")
             }
         }.start()
     }

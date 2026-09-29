@@ -33,11 +33,12 @@ jobs:
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: LingyunFortune-APK
+        name: XingyunFortune-APK
         path: app/build/outputs/apk/debug/*.apk
 
     - name: Prepare Release Asset
       run: |
+        cp app/build/outputs/apk/debug/*.apk ./XingyunFortune.apk
         cp app/build/outputs/apk/debug/*.apk ./LingyunFortune.apk
 
     - name: Publish to Release
@@ -46,4 +47,5 @@ jobs:
       run: |
         gh release upload v1.0.0 ./LingyunFortune.apk --clobber || true
         gh release upload v1.0.1 ./LingyunFortune.apk --clobber || true
-        gh release create v1.0.2 ./LingyunFortune.apk --title "灵运阁 v1.0.2 天文历法时间实时自动同步版" --notes "灵运阁 v1.0.2 天文历法与公历日期毫秒级自动同步、跨天自动轮转、六十甲子干支与建除十二神精准推算" || gh release upload v1.0.2 ./LingyunFortune.apk --clobber
+        gh release upload v1.0.2 ./LingyunFortune.apk --clobber || true
+        gh release create v1.0.3 ./XingyunFortune.apk ./LingyunFortune.apk --title "星运灵签 v1.0.3 沉浸式本地全功能版" --notes "《星运灵签》v1.0.3 依照最新产品需求规范 (PRD) 全面重构发布：纯本地离线运行、传感器物理摇签(100灵签)、十二星座与生肖老黄历双轨运势推演、个人生辰命盘配置、78张塔罗直觉切牌3D翻牌、祈福明灯心愿森林与单机暖心弹幕、120fps极致丝滑动画、原生Canvas高精海报排版与原生一键分享。" || (gh release upload v1.0.3 ./XingyunFortune.apk --clobber && gh release upload v1.0.3 ./LingyunFortune.apk --clobber)
