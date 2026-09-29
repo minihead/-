@@ -6,6 +6,8 @@
   <title>星运灵签 · 乾坤吉曜</title>
   <style>
     :root {
+      --safe-top: env(safe-area-inset-top, 28px);
+      --safe-bottom: env(safe-area-inset-bottom, 24px);
       --font-display: "Songti SC", "Source Han Serif SC", "Noto Serif SC", Didot, "Cinzel", "Baskerville", serif;
       --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", sans-serif;
       --font-mono: "SF Mono", "Menlo", "Courier New", monospace;
@@ -75,7 +77,7 @@
 
     /* Edge-to-edge Native Top Padding */
     .screen-status-bar {
-      height: env(safe-area-inset-top, 24px);
+      height: var(--safe-top, 28px);
       flex-shrink: 0;
     }
 
@@ -138,7 +140,7 @@
     /* Scrollable Screen Body */
     .app-screen-body {
       flex: 1;
-      padding: 8px 12px calc(env(safe-area-inset-bottom, 20px) + 68px);
+      padding: 8px 12px 0;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -763,6 +765,15 @@
       cursor: pointer;
     }
 
+    /* Dynamic Bottom Clearance Spacer to Prevent Any Dock / Nav-bar Obstruction */
+    .screen-bottom-spacer {
+      width: 100%;
+      height: calc(var(--safe-bottom, 24px) + 84px);
+      min-height: 108px;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
     /* Screen Action Buttons */
     .screen-action-btn {
       width: 100%;
@@ -790,7 +801,7 @@
     /* Floating Frosted Glass Bottom Dock */
     .floating-bottom-dock {
       position: absolute;
-      bottom: calc(env(safe-area-inset-bottom, 10px) + 6px);
+      bottom: calc(var(--safe-bottom, 24px) + 8px);
       left: 12px;
       right: 12px;
       height: 48px;
@@ -1023,6 +1034,7 @@
         <button class="screen-action-btn" id="btn-trigger-shake">
           🎋 摇动蓝宝石金丝签筒
         </button>
+        <div class="screen-bottom-spacer"></div>
       </div>
 
       <!-- ================= MODULE 2: FORTUNE / ALMANAC ================= -->
@@ -1250,6 +1262,7 @@
         <button class="screen-action-btn" id="btn-export-poster">
           📜 生成今日专属高定运势卡
         </button>
+        <div class="screen-bottom-spacer"></div>
       </div>
 
       <!-- ================= MODULE 3: TAROT ================= -->
@@ -1331,6 +1344,7 @@
         <button class="screen-action-btn" id="btn-draw-tarot">
           🎴 3D 棱镜切牌 · 直觉抽取
         </button>
+        <div class="screen-bottom-spacer"></div>
       </div>
 
       <!-- ================= MODULE 4: LANTERN ================= -->
@@ -1392,6 +1406,7 @@
         <button class="screen-action-btn" id="btn-send-wish">
           🏮 点亮一盏祈福明灯升空
         </button>
+        <div class="screen-bottom-spacer"></div>
       </div>
 
     </div>
@@ -2121,6 +2136,14 @@
 
     window.handleNativeShake = function() {
       executeShake();
+    };
+
+    // Android Native System Insets Dispatcher
+    window.setSystemInsets = function(topDp, bottomDp) {
+      const safeTop = Math.max(topDp || 0, 24);
+      const safeBottom = Math.max(bottomDp || 0, 24);
+      document.documentElement.style.setProperty('--safe-top', safeTop + 'px');
+      document.documentElement.style.setProperty('--safe-bottom', safeBottom + 'px');
     };
 
     window.handleAndroidBack = function() {

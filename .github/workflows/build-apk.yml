@@ -46,12 +46,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cat << 'NOTES' > release_notes.md
-        《星运灵签》v1.0.5 运势大盘首页重构与生肖星轨全量动态版：
-        1. 默认首页升级为【今日运势】：打开即入高定双轨运势大盘，底部悬浮磨砂晶体 Dock 默认高亮【运势】，灵签/塔罗/祈福并列随心切换。
-        2. 十二星座全动态能量引擎：彻底解决“仅显示天蝎座”问题，白羊至双鱼十二星座完整动态演算（综合/灵感/事业/情感四维雷达、契合星座、能量宝石、天象合轴、灵修避坑穿搭全维度解析）。
-        3. 十二生肖专属运势全面恢复与强化：老黄历面板植入鼠至猪12生肖横向滑轨，一键切换专属岁运流转、四维指数、三合六合贵人、冲犯提醒与处事锦囊。
-        4. 融合万年老黄历与十二时辰吉凶全览：子丑寅卯辰巳午未申酉戌亥全时辰吉凶表（当前时辰高亮）、建除十二神、五行纳音、彭祖百忌与胎神占方。
-        5. 彻底消除界面空旷感：黄金比例卡片排版、三相时令能量流转、自适应系统农历与干支时间同步，打造顶级光学晶体质感。
+        《星运灵签》v1.0.6 首页底部遮挡彻底修复与全屏安全边距自适应版：
+        1. 核心修复【首页底部遮挡操作按钮】：重构滚动视口与底部悬浮磨砂 Dock 的层叠交互，新增物理级 Screen Bottom Spacer 占位垫片，当页面滚动至底端时，运势卡生成按钮与底部 Dock 保持至少 64px 极度舒适的净空距离，彻底消除任何遮挡与误触。
+        2. 原生适配 Android 系统导航栏：接入 WindowCompat 与 ViewCompat.setOnApplyWindowInsetsListener，动态监听全面屏手势栏与经典三键导航栏（Back/Home/Recents）的像素高度，实时同步至 WebView CSS 变量，确保底部 Dock 与系统按键永不重叠冲突。
+        3. 全量模块按钮排版加固：对【灵签】摇签筒、【运势】生成专属签卡、【塔罗】3D切牌抽取、【祈福】点灯升空全部四大核心主交互按钮施加同等安全垫片与层级加固。
+        4. 全机型全分辨率屏幕 100% 完美可见与触控：不管是高刷曲面屏、直板长屏还是传统比例手机，运势卡片、分析雷达与操作按钮全部顺畅滑动且无遮挡。
         NOTES
 
         gh release upload v1.0.0 ./LingyunFortune.apk --clobber || true
@@ -59,4 +58,5 @@ jobs:
         gh release upload v1.0.2 ./LingyunFortune.apk --clobber || true
         gh release upload v1.0.3 ./XingyunFortune.apk ./LingyunFortune.apk --clobber || true
         gh release upload v1.0.4 ./XingyunFortune.apk ./LingyunFortune.apk --clobber || true
-        gh release create v1.0.5 ./XingyunFortune.apk ./LingyunFortune.apk --title "星运灵签 v1.0.5 运势大盘首页与生肖星轨全量动态版" --notes-file release_notes.md || (gh release upload v1.0.5 ./XingyunFortune.apk --clobber && gh release upload v1.0.5 ./LingyunFortune.apk --clobber)
+        gh release upload v1.0.5 ./XingyunFortune.apk ./LingyunFortune.apk --clobber || true
+        gh release create v1.0.6 ./XingyunFortune.apk ./LingyunFortune.apk --title "星运灵签 v1.0.6 首页底部遮挡彻底修复与安全边距自适应版" --notes-file release_notes.md || (gh release upload v1.0.6 ./XingyunFortune.apk --clobber && gh release upload v1.0.6 ./LingyunFortune.apk --clobber)

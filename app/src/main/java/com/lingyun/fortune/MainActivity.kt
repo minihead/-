@@ -19,7 +19,9 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import kotlin.math.abs
 
@@ -36,6 +38,35 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var lastY = 0f
     private var lastZ = 0f
     private var isFirstSensorRead = true
+
+    private var cachedStatusTopDp = 28
+    private var cachedNavBottomDp = 24
+
+    private fun setupInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { _, windowInsets ->
+            val navInsets = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            val statusInsets = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
+            val density = resources.displayMetrics.density
+            if (density > 0) {
+                cachedNavBottomDp = (navInsets.bottom / density).toInt()
+                cachedStatusTopDp = (statusInsets.top / density).toInt()
+            }
+            dispatchInsetsToWeb()
+            windowInsets
+        }
+    }
+
+    private fun dispatchInsetsToWeb() {
+        val top = if (cachedStatusTopDp > 0) cachedStatusTopDp else 28
+        val bottom = if (cachedNavBottomDp > 0) cachedNavBottomDp else 24
+        webView.post {
+            webView.evaluateJavascript(
+                "if (typeof window.setSystemInsets === 'function') { window.setSystemInsets($top, $bottom); }",
+                null
+            )
+        }
+    }
+
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +86,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         webView = WebView(this)
         setContentView(webView)
 
+        setupInsets()
         setupWebView()
         setupBackNavigation()
         setupAccelerometer()
@@ -130,7 +162,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun setupWebView() {
+    private fun setupInsets()
+        setupWebView() {
         webView.apply {
             setBackgroundColor(Color.parseColor("#07080E"))
             overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
@@ -164,6 +197,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+                    dispatchInsetsToWeb()
                 }
             }
 
