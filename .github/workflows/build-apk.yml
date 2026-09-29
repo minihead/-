@@ -45,13 +45,17 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        cat << 'NOTES' > release_notes.md
+        《星运灵签》v1.0.4 顶级光学晶体与充盈美学高定重构版：
+        1. 浑天仪天文星盘法阵：主祈运坛场增加浑天仪动态微光刻度环与莲花悬浮底座，神圣感与视觉景深拉满。
+        2. 消除界面空旷感：植入十二时辰天星流转轮（子丑寅卯吉凶速查）、每日玄冥金句、天象吉兆与三合解引卡。
+        3. 运势双轨升级：十二星座四维能量雷达（综合/灵感/事业/情感）+ 天象合轴与星轨共鸣；老黄历干支历法 + 彭祖百忌与十二神煞冲煞全解。
+        4. 塔罗三维洞察透镜：3D扇形展开与120fps正逆位立体翻转，【当下心境】【人际契机】【内在指引】深度解构 + 7天觉醒星辉打卡。
+        5. 悬浮液态玻璃Bottom Dock：采用次时代悬浮磨砂晶体底栏，支持432Hz真实铜钵与机械声学回弹。
+        NOTES
+
         gh release upload v1.0.0 ./LingyunFortune.apk --clobber || true
         gh release upload v1.0.1 ./LingyunFortune.apk --clobber || true
         gh release upload v1.0.2 ./LingyunFortune.apk --clobber || true
         gh release upload v1.0.3 ./XingyunFortune.apk ./LingyunFortune.apk --clobber || true
-        gh release create v1.0.4 ./XingyunFortune.apk ./LingyunFortune.apk --title "星运灵签 v1.0.4 顶级光学晶体与充盈美学高定版" --notes "《星运灵签》v1.0.4 视觉与布局终极重构：
-1. 浑天仪天文星盘法阵：主祈运坛场增加浑天仪动态微光刻度环与莲花悬浮底座，神圣感与视觉景深拉满。
-2. 消除界面空旷感：植入十二时辰天星流转轮（子丑寅卯吉凶速查）、每日玄冥金句、天象吉兆与三合解引卡。
-3. 运势双轨升级：十二星座四维能量雷达（综合/灵感/事业/情感）+ 天象合轴与星轨共鸣；老黄历干支历法 + 彭祖百忌与十二神煞冲煞全解。
-4. 塔罗三维洞察透镜：3D扇形展开与120fps正逆位立体翻转，【当下心境】【人际契机】【内在指引】深度解构 + 7天觉醒星辉打卡。
-5. 悬浮液态玻璃Bottom Dock：采用次时代悬浮磨砂晶体底栏，支持432Hz真实铜钵与机械声学回弹。" || (gh release upload v1.0.4 ./XingyunFortune.apk --clobber && gh release upload v1.0.4 ./LingyunFortune.apk --clobber)
+        gh release create v1.0.4 ./XingyunFortune.apk ./LingyunFortune.apk --title "星运灵签 v1.0.4 顶级光学晶体与充盈美学高定版" --notes-file release_notes.md || (gh release upload v1.0.4 ./XingyunFortune.apk --clobber && gh release upload v1.0.4 ./LingyunFortune.apk --clobber)
