@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>星运灵签 · 视觉预览</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #ebe6dc; background: #101218; font-family: system-ui,sans-serif; }
+    main { max-width: 1100px; margin: auto; padding: 36px 24px; display: grid; grid-template-columns: 1fr 390px; gap: 60px; align-items: center; }
+    h1 { font-family: serif; font-size: 44px; letter-spacing: 3px; }
+    p { line-height: 1.8; color: #a6acb9; }
+    .themes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 28px 0; }
+    button { min-height: 64px; padding: 12px; border: 1px solid #4e4638; border-radius: 12px; color: inherit; background: #1a1e29; cursor: pointer; }
+    button[aria-pressed=true] { border-color: #dec088; background: #343029; }
+    iframe { display: block; width: 390px; height: min(844px,88vh); min-height: 480px; border: 1px solid #5a5142; border-radius: 26px; box-shadow: 0 30px 90px #0008; background: #030406; }
+    a { color: #dec088; }
+    @media(max-width:800px) { main { display: block; padding: 20px 12px; } h1 { font-size: 30px; } iframe { width: 100%; max-width: 430px; margin: 20px auto; height: 78vh; } }
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <p>星运灵签 · 四种色调，同一份日常</p>
+      <h1>给今天<br>一点温柔的指引。</h1>
+      <p>切换下方主题，直接体验完整应用。星座、灵签、塔罗和心愿都复用实际打包代码，预览不再维护另一套业务逻辑。</p>
+      <div class="themes">
+        <button data-theme="gold" aria-pressed="true">曜石 · 香槟金</button>
+        <button data-theme="silver" aria-pressed="false">月影 · 银白</button>
+        <button data-theme="rose" aria-pressed="false">暮色 · 蔷薇</button>
+        <button data-theme="jade" aria-pressed="false">松风 · 青玉</button>
+      </div>
+      <p>运势为离线娱乐生成；农历黄历由本地历法库计算。网页记录保存在当前浏览器。</p>
+      <a href="app/src/main/assets/index.html" target="_blank" rel="noopener">打开全屏应用 →</a>
+    </section>
+    <iframe id="app-preview" src="app/src/main/assets/index.html" title="星运灵签实时应用预览"></iframe>
+  </main>
+  <script>
+    const preview = document.getElementById('app-preview');
+    let selectedTheme = 'gold';
+    function applyTheme() { preview.contentWindow.postMessage({ type: 'fortune-preview-theme', theme: selectedTheme }, location.protocol === 'file:' ? '*' : location.origin); }
+    document.querySelectorAll('[data-theme]').forEach(button => button.addEventListener('click', () => {
+      selectedTheme = button.dataset.theme;
+      document.querySelectorAll('[data-theme]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+      applyTheme();
+    }));
+    preview.addEventListener('load', applyTheme);
+  </script>
+</body>
+</html>

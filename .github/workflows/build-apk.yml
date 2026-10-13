@@ -1,62 +1,130 @@
-name: Build Android APK
+name: Verify and build Android
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build:
+  web:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.25.0'
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run check
+      - run: git diff --exit-code -- app/src/main/assets/vendor
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-test-results
+          path: test-results/
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+  android:
+    needs: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Verify Gradle wrapper
+        run: echo '0336f591bc0ec9aa0c9988929b93ecc916b3c1d52aed202c7381db144aa0ef15  gradle/wrapper/gradle-wrapper.jar' | sha256sum --check
+      - name: Android lint and tests
+        run: ./gradlew lintDebug testDebugUnitTest
+      - name: Build development artifact
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        run: ./gradlew assembleDebug
+      - name: Upload development APK
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: XingyunFortune-debug-not-for-release
+          path: app/build/outputs/apk/debug/*.apk
+      - name: Prepare stable signing key
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          CERT_SHA256: ${{ secrets.ANDROID_SIGNING_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_BASE64" && test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_ALIAS" && test -n "$KEY_PASSWORD" && test -n "$CERT_SHA256"
+          version=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts)
+          test "$GITHUB_REF_NAME" = "v$version"
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+      - name: Build signed release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+      - name: Verify signing identity
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          EXPECTED_CERT_SHA256: ${{ secrets.ANDROID_SIGNING_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          signer="$ANDROID_HOME/build-tools/34.0.0/apksigner"
+          "$signer" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/signature.txt"
+          actual=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/signature.txt" | tr '[:upper:]' '[:lower:]' | tr -d ': ')
+          expected=$(printf '%s' "$EXPECTED_CERT_SHA256" | tr '[:upper:]' '[:lower:]' | tr -d ': ')
+          test -n "$actual" && test "$actual" = "$expected"
+          asset="XingyunFortune-$GITHUB_REF_NAME.apk"
+          cp "$apk" "$asset"
+          sha256sum "$asset" > SHA256SUMS.txt
+      - name: Upload verified release files
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-release
+          path: |
+            XingyunFortune-v*.apk
+            SHA256SUMS.txt
+            RELEASE_NOTES.md
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: 8.4
-
-    - name: Build Debug APK
-      run: gradle assembleDebug
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: XingyunFortune-APK
-        path: app/build/outputs/apk/debug/*.apk
-
-    - name: Prepare Release Asset
-      run: |
-        cp app/build/outputs/apk/debug/*.apk ./XingyunFortune.apk
-        cp app/build/outputs/apk/debug/*.apk ./LingyunFortune.apk
-
-    - name: Publish to Release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        cat << 'NOTES' > release_notes.md
-        《星运灵签》v1.0.6 首页底部遮挡彻底修复与全屏安全边距自适应版：
-        1. 核心修复【首页底部遮挡操作按钮】：重构滚动视口与底部悬浮磨砂 Dock 的层叠交互，新增物理级 Screen Bottom Spacer 占位垫片，当页面滚动至底端时，运势卡生成按钮与底部 Dock 保持至少 64px 极度舒适的净空距离，彻底消除任何遮挡与误触。
-        2. 原生适配 Android 系统导航栏：接入 WindowCompat 与 ViewCompat.setOnApplyWindowInsetsListener，动态监听全面屏手势栏与经典三键导航栏（Back/Home/Recents）的像素高度，实时同步至 WebView CSS 变量，确保底部 Dock 与系统按键永不重叠冲突。
-        3. 全量模块按钮排版加固：对【灵签】摇签筒、【运势】生成专属签卡、【塔罗】3D切牌抽取、【祈福】点灯升空全部四大核心主交互按钮施加同等安全垫片与层级加固。
-        4. 全机型全分辨率屏幕 100% 完美可见与触控：不管是高刷曲面屏、直板长屏还是传统比例手机，运势卡片、分析雷达与操作按钮全部顺畅滑动且无遮挡。
-        NOTES
-
-        gh release upload v1.0.0 ./LingyunFortune.apk --clobber || true
-        gh release upload v1.0.1 ./LingyunFortune.apk --clobber || true
-        gh release upload v1.0.2 ./LingyunFortune.apk --clobber || true
-        gh release upload v1.0.3 ./XingyunFortune.apk ./LingyunFortune.apk --clobber || true
-        gh release upload v1.0.4 ./XingyunFortune.apk ./LingyunFortune.apk --clobber || true
-        gh release upload v1.0.5 ./XingyunFortune.apk ./LingyunFortune.apk --clobber || true
-        gh release create v1.0.6 ./XingyunFortune.apk ./LingyunFortune.apk --title "星运灵签 v1.0.6 首页底部遮挡彻底修复与安全边距自适应版" --notes-file release_notes.md || (gh release upload v1.0.6 ./XingyunFortune.apk --clobber && gh release upload v1.0.6 ./LingyunFortune.apk --clobber)
+  publish:
+    needs: android
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: signed-release
+      - name: Publish only the verified tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          sha256sum --check SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" "XingyunFortune-$GITHUB_REF_NAME.apk" SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --verify-tag --title "星运灵签 $GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
